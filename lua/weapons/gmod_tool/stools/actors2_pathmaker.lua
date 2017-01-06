@@ -60,8 +60,15 @@ function TOOL:LeftClick( trace )
 		undo.SetCustomUndoText(AC2_LANG[A2LANG]["ac2_tool_pm_remove_pathpnt"])
 		undo.AddFunction( function()
 			PathPointTBL[#PathPointTBL] = nil
+			net.Start( "DrawPathPointLine" )
+				net.WriteTable( PathPointTBL )
+			net.Send( ply )
 		end)
 	undo.Finish("RMVPathPoint")
+
+	net.Start( "DrawPathPointLine" )
+		net.WriteTable( PathPointTBL )
+	net.Send( ply )
 
 	return true
 end
@@ -79,7 +86,13 @@ function TOOL:Think()
 end
 
 // -- Functions ---------------------------------------------------------------------- //
+if CLIENT then
+
+end
+
 if SERVER then
+	util.AddNetworkString( "DrawPathPointLine" )
+
 	function CreatePathPoint( ply, pos )
 		pathpnt = ents.Create( "ac2_pathpoint" )
 		if not IsValid( pathpnt ) then return false end

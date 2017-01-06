@@ -2,6 +2,9 @@ AddCSLuaFile()
 DEFINE_BASECLASS( "base_gmodentity" )
 
 ENT.Spawnable = false
+local LaserMat = Material("trails/laser")
+local PathPointLinesTBL = {}
+local PathPointLineOffset = Vector(0,0,2)
 
 function ENT:Initialize()
 	if ( SERVER ) then
@@ -33,6 +36,12 @@ function ENT:CanTool( ply, tr, tool )
 	end
 end
 
+if CLIENT then
+	net.Receive( "DrawPathPointLine", function()
+		PathPointLinesTBL = net.ReadTable()
+	end )
+end
+
 // -- Makes the Path Point Invisible when the using the Gmod Camera ------------------ //
 function ENT:Draw()
 	local ply = LocalPlayer()
@@ -43,4 +52,13 @@ function ENT:Draw()
 		if ( weapon_name == "gmod_camera" ) then return end
 	end
 	BaseClass.Draw( self )
+
+	if ( #PathPointLinesTBL >= 2 ) then
+		render.SetMaterial( LaserMat )
+		for i = 2, #PathPointLinesTBL do
+			local PathP1 = ents.GetByIndex( PathPointLinesTBL[i] )
+			local PathP2 = ents.GetByIndex( PathPointLinesTBL[i-1] )
+			render.DrawBeam( PathP1:GetPos()+PathPointLineOffset, PathP2:GetPos()+PathPointLineOffset, 3, 1, 1, Color(255, 255, 255, 255) )
+		end
+	end
 end
