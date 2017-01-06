@@ -25,7 +25,13 @@ function ENT:Initialize()
 	
 	// -- Removes the drive, persist and collision properties of the entity
 	hook.Add( "CanProperty", "prevent_path_property", function( ply, property, ent )
-		if ( property == "drive" or property == "persist" or property == "collision") then return false end
+		if ( ent:GetClass() == "ac2_pathpoint" ) then
+			if ( property == "drive" or property == "persist" or property == "collision" or property == "remover") then 
+				return false 
+			end
+		else
+			return true
+		end
 	end )
 end
 
