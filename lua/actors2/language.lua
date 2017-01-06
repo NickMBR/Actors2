@@ -8,7 +8,7 @@ AC2_LANG = {
 		["ac2_tool_pm_reload"]			= "Transform aimed point into an Action Point",
 		["ac2_tool_pm_info"]			= "Use the Context Menu for more options",
 		["ac2_tool_pm_desc"]			= "Creates the path of the Actors.",
-		["ac2_tool_pm_remove_pathptn"]	= "Removed Path Point",
+		["ac2_tool_pm_remove_pathpnt"]	= "Removed Path Point",
 	},
 	["pt-BR"] = {
 		["ac2_tool_category"] 			= "Atores2",
@@ -18,7 +18,7 @@ AC2_LANG = {
 		["ac2_tool_pm_reload"] 			= "Transformar ponto mirado em um Ponto de Ação",
 		["ac2_tool_pm_info"]			= "Use o Menu de Contexto para mais opções",
 		["ac2_tool_pm_desc"]			= "Cria o trajeto para os Atores.",
-		["ac2_tool_pm_remove_pathptn"]	= "Ponto de Trajeto Removido",
+		["ac2_tool_pm_remove_pathpnt"]	= "Ponto de Trajeto Removido",
 	}
 }
 

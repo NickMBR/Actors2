@@ -14,6 +14,9 @@ GM Crashes: 0
 
 */
 
+// -- Variables ---------------------------------------------------------------------- //
+PathPointTBL = {}
+
 // -- Tool Language and Translation -------------------------------------------------- //
 if ( CLIENT ) then
 	TOOL.Category	= AC2_LANG[A2LANG]["ac2_tool_category"]
@@ -39,32 +42,30 @@ if ( CLIENT ) then
 	language.Add("tool.actors2_pathmaker.0", AC2_LANG[A2LANG]["ac2_tool_pm_info"])
 end
 
-// -- Functions ---------------------------------------------------------------------- //
-if SERVER then
-	function CreatePathPoint( ply, pos )
-		pathptn = ents.Create( "ac2_pathpoint" )
-		if ( !IsValid( pathptn ) ) then return false end
-
-		pathptn:SetPlayer( ply )
-		pathptn:SetPos( pos )
-		pathptn:Spawn()
-	end
-end
-
 function TOOL:LeftClick( trace )
-	if ( !trace.HitPos ) 			then return false end
-	if ( trace.Entity:IsPlayer() ) 	then return false end
-	if ( CLIENT ) 					then return true end
+	if not trace.HitPos then return false end
+	if trace.Entity:IsPlayer() then return false end
+	if CLIENT then return true end
 	
 	local ply = self:GetOwner()
 	local PathPoint = CreatePathPoint( ply, trace.HitPos )
 	
 	-- Creates the Undo Entry for the SP
 	undo.Create("RMVPathPoint")
-		undo.AddEntity(pathptn)
+		undo.AddEntity(pathpnt)
 		undo.SetPlayer(ply)
-		undo.SetCustomUndoText(AC2_LANG[A2LANG]["ac2_tool_pm_remove_pathptn"])
+		undo.SetCustomUndoText(AC2_LANG[A2LANG]["ac2_tool_pm_remove_pathpnt"])
+
+		-- Handles the PathPoint Table
+		table.insert(PathPointTBL, tostring(pathpnt))
+		undo.AddFunction( function()
+			for k, v in pairs (PathPointTBL) do
+				if v == tostring(pathpnt) then table.remove(PathPointTBL, k) end
+			end
+		end)
 	undo.Finish("RMVPathPoint")
+
+	PrintTable(PathPointTBL)
 
 	return true
 end
@@ -75,4 +76,20 @@ end
 
 function TOOL:Reload( trace )
 
+end
+
+function TOOL:Think()
+
+end
+
+// -- Functions ---------------------------------------------------------------------- //
+if SERVER then
+	local function CreatePathPoint( ply, pos )
+		pathpnt = ents.Create( "ac2_pathpoint" )
+		if not IsValid( pathpnt ) then return false end
+
+		pathpnt:SetPlayer( ply )
+		pathpnt:SetPos( pos )
+		pathpnt:Spawn()
+	end
 end
