@@ -49,23 +49,19 @@ function TOOL:LeftClick( trace )
 	
 	local ply = self:GetOwner()
 	local PathPoint = CreatePathPoint( ply, trace.HitPos )
+
+	-- Handles the PathPoint Table
+	table.insert(PathPointTBL, pathpnt:EntIndex())
 	
-	-- Creates the Undo Entry for the SP
+	-- Creates the Undo Entry for the Path Point
 	undo.Create("RMVPathPoint")
 		undo.AddEntity(pathpnt)
 		undo.SetPlayer(ply)
 		undo.SetCustomUndoText(AC2_LANG[A2LANG]["ac2_tool_pm_remove_pathpnt"])
-
-		-- Handles the PathPoint Table
-		table.insert(PathPointTBL, tostring(pathpnt))
 		undo.AddFunction( function()
-			for k, v in pairs (PathPointTBL) do
-				if v == tostring(pathpnt) then table.remove(PathPointTBL, k) end
-			end
+			PathPointTBL[#PathPointTBL] = nil
 		end)
 	undo.Finish("RMVPathPoint")
-
-	PrintTable(PathPointTBL)
 
 	return true
 end
@@ -84,7 +80,7 @@ end
 
 // -- Functions ---------------------------------------------------------------------- //
 if SERVER then
-	local function CreatePathPoint( ply, pos )
+	function CreatePathPoint( ply, pos )
 		pathpnt = ents.Create( "ac2_pathpoint" )
 		if not IsValid( pathpnt ) then return false end
 
