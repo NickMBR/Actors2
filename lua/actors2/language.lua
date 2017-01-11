@@ -1,3 +1,6 @@
+-- ## ----------------------------------- Actors2 ---------------------------------- ## --
+	-- Translations
+-- ## ------------------------------------------------------------------------------ ## --
 A2LANG = ""
 AC2_LANG = {
 	["en"] = {
@@ -5,6 +8,7 @@ AC2_LANG = {
 		["ac2_tool_pathmaker"] 			= "Path Maker",
 		["ac2_tool_pm_leftclick"] 		= "Spawn Path Point",
 		["ac2_tool_pm_rightclick"] 		= "Remove Path Point",
+		["ac2_tool_pm_shiftreload"] 	= "Toggle Selection between Path Points",
 		["ac2_tool_pm_reload"]			= "Transform aimed point into an Action Point",
 		["ac2_tool_pm_info"]			= "Use the Context Menu for more options",
 		["ac2_tool_pm_desc"]			= "Creates the path of the Actors.",
@@ -15,6 +19,7 @@ AC2_LANG = {
 		["ac2_tool_pathmaker"] 			= "Trajeto",
 		["ac2_tool_pm_leftclick"] 		= "Adicionar Ponto de Trajeto",
 		["ac2_tool_pm_rightclick"] 		= "Remover Ponto de Trajeto",
+		["ac2_tool_pm_shiftreload"] 	= "Alternar Seleção entre Pontos de Trajeto",
 		["ac2_tool_pm_reload"] 			= "Transformar ponto mirado em um Ponto de Ação",
 		["ac2_tool_pm_info"]			= "Use o Menu de Contexto para mais opções",
 		["ac2_tool_pm_desc"]			= "Cria o trajeto para os Atores.",
@@ -22,6 +27,10 @@ AC2_LANG = {
 	}
 }
 
+-- ## ----------------------------------- Actors2 ---------------------------------- ## --
+	-- Automatic Language Selection
+	-- 1. If it is not supported by the array above the language is set to English.
+-- ## ------------------------------------------------------------------------------ ## --
 function checkLanguage( language )
 	for k,v in SortedPairs( AC2_LANG ) do
 		if k == language then

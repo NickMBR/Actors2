@@ -23,7 +23,7 @@ function ENT:Initialize()
 		self:DrawShadow( false )
 	end
 	
-	// -- Removes the drive, persist and collision properties of the entity
+	-- Removes the drive, persist and collision properties of the entity
 	hook.Add( "CanProperty", "prevent_path_property", function( ply, property, ent )
 		if ( ent:GetClass() == "ac2_pathpoint" ) then
 			if ( property == "drive" or property == "persist" or property == "collision" or property == "remover") then 
@@ -35,7 +35,7 @@ function ENT:Initialize()
 	end )
 end
 
-// -- Prevents the use of any Gmod tools on this entity ------------------------------ //
+-- Prevents the use of any Gmod tools on this entity
 function ENT:CanTool( ply, tr, tool )
 	if IsValid( tr.Entity ) and tr.Entity:GetClass() == "ac2_pathpoint" then
 		return false
@@ -48,17 +48,18 @@ if CLIENT then
 	end )
 end
 
-// -- Makes the Path Point Invisible when the using the Gmod Camera ------------------ //
 function ENT:Draw()
 	local ply = LocalPlayer()
 	local wep = ply:GetActiveWeapon()
 
+	-- Makes the Path Point Invisible when the using the Gmod Camera
 	if ( wep:IsValid() ) then 
 		local weapon_name = wep:GetClass()
 		if ( weapon_name == "gmod_camera" ) then return end
 	end
 	BaseClass.Draw( self )
 
+	-- Draws a line between the Path Points
 	if ( #PathPointLinesTBL >= 2 ) then
 		render.SetMaterial( LaserMat )
 		for i = 2, #PathPointLinesTBL do
