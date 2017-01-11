@@ -24,17 +24,9 @@ function ENT:Initialize()
 	end
 
 	if ( #PathPointLinesTBL == 1 ) then self:SetColor( Color( 225, 150, 55, 255 ) ) else self:SetColor( Color( 30, 60, 210, 255 ) ) end
-
-	-- Allows only the Actors2 properties to be shown
-	--[[hook.Add( "CanProperty", "prevent_path_property", function( ply, property, ent )
-		if ( ent:GetClass() == "ac2_pathpoint" ) then
-			if property == "ac2_p_editactor" or property == "ac2_p_actionpoint" then return true else return false end
-		else
-			return true
-		end
-	end )]]--
 end
 
+-- Allows only the Actors2 properties to be shown
 function ENT:CanProperty( ply, property )
 	if property == "ac2_p_editactor" and self:GetColor().r == 225 and self:GetColor().g == 150 then return true
 	elseif property == "ac2_p_actionpoint" and self:GetColor().r == 30 and self:GetColor().g == 60 then return true

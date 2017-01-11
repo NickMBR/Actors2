@@ -15,6 +15,22 @@ local Actors2TBL = {}
 local PathPointsTBL = {}
 
 -- ## ----------------------------------- Actors2 ---------------------------------- ## --
+	-- Resources
+-- ## ------------------------------------------------------------------------------ ## --
+resource.AddFile( "buttons/button15.wav" )
+
+-- ## ----------------------------------- Actors2 ---------------------------------- ## --
+	-- Hooks
+-- ## ------------------------------------------------------------------------------ ## --
+if SERVER then
+	local function ClearTablesWhenSVCleanUP()
+		Actors2TBL = {}
+		PathPointsTBL = {}
+	end
+	hook.Add( "PostCleanupMap", "AC2PostCleanupMap", ClearTablesWhenSVCleanUP )
+end
+
+-- ## ----------------------------------- Actors2 ---------------------------------- ## --
 	-- Tool Keys, Language, Translation
 -- ## ------------------------------------------------------------------------------ ## --
 if ( CLIENT ) then
@@ -45,6 +61,10 @@ if ( CLIENT ) then
 	language.Add("tool.actors2_pathmaker.name", AC2_LANG[A2LANG]["ac2_tool_category"])
 	language.Add("tool.actors2_pathmaker.desc", AC2_LANG[A2LANG]["ac2_tool_pm_desc"])
 	language.Add("tool.actors2_pathmaker.0", AC2_LANG[A2LANG]["ac2_tool_pm_info"])
+
+	-- Custom Lang Strings
+	language.Add("ac2_notify_removed_pathptn", "["..AC2_LANG[A2LANG]["ac2_tool_category"].."] "..AC2_LANG[A2LANG]["ac2_tool_pm_remove_pathpnt"])
+
 end
 
 -- ## ----------------------------------- Actors2 ---------------------------------- ## --
@@ -61,16 +81,6 @@ function TOOL:LeftClick( trace )
 	local PathPoint = CreatePathPoint( ply, trace.HitPos )
 
 	BuildActorTable(ply, pathpnt)
-	
-	-- Creates the Undo Entry for the Path Point
-	undo.Create("RMVPathPoint")
-		undo.AddEntity(pathpnt)
-		undo.SetPlayer(ply)
-		undo.SetCustomUndoText(AC2_LANG[A2LANG]["ac2_tool_pm_remove_pathpnt"])
-		undo.AddFunction( function()
-			RemoveFromPathPointsTable( ply )
-		end)
-	undo.Finish("RMVPathPoint")
 
 	return true
 end
@@ -79,7 +89,14 @@ end
 	-- Path Point Remover
 -- ## ------------------------------------------------------------------------------ ## --
 function TOOL:RightClick( trace )
+	if not trace.HitPos then return false end
+	if trace.Entity:IsPlayer() then return false end
+	if CLIENT then return true end
 
+	PrintTable(Actors2TBL)
+	local ply = self:GetOwner()
+	RemovePathPoint( ply )
+	return false
 end
 
 function TOOL:Reload( trace )
@@ -91,11 +108,15 @@ function TOOL:Think()
 end
 
 -- ## ----------------------------------- Actors2 ---------------------------------- ## --
-	-- Functions
+	-- Table Management Functions
 -- ## ------------------------------------------------------------------------------ ## --
+local function IsEmptyTable( t )
+	return next( t ) == nil
+end
+
 local function CheckForPlayer( ply )
 	local rtn = {}
-	if next(Actors2TBL) then
+	if not IsEmptyTable(Actors2TBL) then
 		for k,v in pairs ( Actors2TBL ) do
 			for ke,va in SortedPairs ( v ) do
 				if ke == ply:SteamID() then
@@ -105,7 +126,6 @@ local function CheckForPlayer( ply )
 			end
 		end
 	end
-	return nil
 end
 
 local function PopulateActorTable( ply )
@@ -119,19 +139,40 @@ local function PopulateActorTable( ply )
 	table.insert(Actors2TBL, TempTable)
 end
 
-local function PopulatePathPointsTable( ply, ent )
+local function GetPathPointsTBL( ply )
 	local TempTBL = CheckForPlayer( ply )
-	local TempPathTBL = Actors2TBL[TempTBL[1]][TempTBL[2]].PathPoints
 	if TempTBL then
-		table.insert(TempPathTBL, ent:EntIndex())
+		local TempPathTBL = Actors2TBL[TempTBL[1]][TempTBL[2]].PathPoints
+		return TempPathTBL
+	end
+end
+
+local function PopulatePathPointsTable( ply, ent )
+	local TempPTBL = GetPathPointsTBL( ply )
+	if TempPTBL then
+		table.insert(TempPTBL, ent:EntIndex())
 		net.Start( "DrawPathPointLine" )
-			net.WriteTable( TempPathTBL )
+			net.WriteTable( TempPTBL )
 		net.Send( ply )
 	end
 end
 
+local function RemoveFromPathPointsTable( ply )
+	local TBLKeyToRemove = GetPathPointsTBL( ply )
+	if TBLKeyToRemove then 
+		TBLKeyToRemove[#TBLKeyToRemove] = nil
+		net.Start( "DrawPathPointLine" )
+			net.WriteTable( TBLKeyToRemove )
+		net.Send( ply )
+	end
+end
+
+-- ## ----------------------------------- Actors2 ---------------------------------- ## --
+	-- TOOL Click Functions
+	-- 1. Order Matters!
+-- ## ------------------------------------------------------------------------------ ## --
 function BuildActorTable( ply, ent )
-	if next(Actors2TBL) == nil then
+	if IsEmptyTable(Actors2TBL) then
 		PopulateActorTable( ply )
 		PopulatePathPointsTable( ply, ent )
 	else
@@ -139,14 +180,15 @@ function BuildActorTable( ply, ent )
 	end
 end
 
-function RemoveFromPathPointsTable( ply )
-	local TempTBL = CheckForPlayer( ply )
-	local TBLKeyToRemove = Actors2TBL[TempTBL[1]][TempTBL[2]].PathPoints
-	TBLKeyToRemove[#TBLKeyToRemove] = nil
-	
-	net.Start( "DrawPathPointLine" )
-		net.WriteTable( TBLKeyToRemove )
-	net.Send( ply )
+function RemovePathPoint( ply )
+	local PathTBL = GetPathPointsTBL( ply )
+	if PathTBL and PathTBL[#PathTBL] != nil then
+		local LastEnt = ents.GetByIndex( PathTBL[#PathTBL] )
+		LastEnt:Remove()
+		RemoveFromPathPointsTable( ply )
+		ply:ChatPrint( "#ac2_notify_removed_pathptn" )
+		if CLIENT then ply:EmitSound( "buttons/button15.wav" ) end
+	end
 end
 
 if CLIENT then
@@ -158,8 +200,8 @@ if SERVER then
 
 	function CreatePathPoint( ply, pos )
 		pathpnt = ents.Create( "ac2_pathpoint" )
-		if not IsValid( pathpnt ) then return false end
-
+		if not IsValid( pathpnt ) then return end
+		
 		pathpnt:SetPlayer( ply )
 		pathpnt:SetPos( pos )
 		pathpnt:Spawn()
