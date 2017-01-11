@@ -19,11 +19,11 @@ function ENT:Initialize()
 		
 		self:SetMaterial("models/debug/debugwhite")
 		self:SetRenderMode( RENDERMODE_TRANSALPHA )
-		--self:SetColor( Color( 30, 60, 210, 255 ) )
+		self:SetColor( Color( 30, 60, 210, 255 ) )
 		self:DrawShadow( false )
 	end
 
-	if ( #PathPointLinesTBL == 1 ) then self:SetColor( Color( 225, 150, 55, 255 ) ) else self:SetColor( Color( 30, 60, 210, 255 ) ) end
+	--if ( #PathPointLinesTBL == 1 ) then self:SetColor( Color( 225, 150, 55, 255 ) ) else self:SetColor( Color( 30, 60, 210, 255 ) ) end
 end
 
 -- Allows only the Actors2 properties to be shown
@@ -37,8 +37,8 @@ end
 
 -- Prevents the use of any Gmod tools on this entity
 function ENT:CanTool( ply, tr, tool )
-	if IsValid( tr.Entity ) and tr.Entity:GetClass() == "ac2_basepoint" then
-		return false
+	if IsValid( tr.Entity ) and tr.Entity:GetClass() == "ac2_pathpoint" then
+		if tool == "actors2_pathmaker" then return true else return false end
 	end
 end
 
@@ -72,5 +72,7 @@ function ENT:Draw()
 end
 
 function ENT:Think()
-	
+	if #PathPointLinesTBL >= 2 then
+		ents.GetByIndex( PathPointLinesTBL[1] ):SetColor( Color( 225, 150, 55, 255 ) )
+	end
 end

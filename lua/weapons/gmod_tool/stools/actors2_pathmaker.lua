@@ -75,6 +75,7 @@ end
 function TOOL:LeftClick( trace )
 	if not trace.HitPos then return false end
 	if trace.Entity:IsPlayer() then return false end
+	if trace.Entity:GetClass() == "ac2_pathpoint" then return false end
 	if CLIENT then return true end
 	
 	local ply = self:GetOwner()
@@ -93,9 +94,14 @@ function TOOL:RightClick( trace )
 	if trace.Entity:IsPlayer() then return false end
 	if CLIENT then return true end
 
-	PrintTable(Actors2TBL)
 	local ply = self:GetOwner()
-	RemovePathPoint( ply )
+
+	if trace.Entity:GetClass() == "ac2_pathpoint" then
+		RemoveAimedPathPoint( ply, trace.Entity)
+	else
+		RemovePathPoint( ply )
+	end
+	
 	return false
 end
 
@@ -147,13 +153,17 @@ local function GetPathPointsTBL( ply )
 	end
 end
 
+local function SendNewPathPointTable( ply, t )
+	net.Start( "DrawPathPointLine" )
+		net.WriteTable( t )
+	net.Send( ply )
+end
+
 local function PopulatePathPointsTable( ply, ent )
 	local TempPTBL = GetPathPointsTBL( ply )
 	if TempPTBL then
 		table.insert(TempPTBL, ent:EntIndex())
-		net.Start( "DrawPathPointLine" )
-			net.WriteTable( TempPTBL )
-		net.Send( ply )
+		SendNewPathPointTable( ply, TempPTBL )
 	end
 end
 
@@ -161,10 +171,15 @@ local function RemoveFromPathPointsTable( ply )
 	local TBLKeyToRemove = GetPathPointsTBL( ply )
 	if TBLKeyToRemove then 
 		TBLKeyToRemove[#TBLKeyToRemove] = nil
-		net.Start( "DrawPathPointLine" )
-			net.WriteTable( TBLKeyToRemove )
-		net.Send( ply )
+		SendNewPathPointTable( ply, TBLKeyToRemove )
 	end
+end
+
+local function SendNotifyClient( ply, msg )
+	net.Start( "NotifyPathPointRMV" )
+		net.WriteEntity( ply )
+		net.WriteString( msg )
+	net.Send( ply )
 end
 
 -- ## ----------------------------------- Actors2 ---------------------------------- ## --
@@ -186,17 +201,39 @@ function RemovePathPoint( ply )
 		local LastEnt = ents.GetByIndex( PathTBL[#PathTBL] )
 		LastEnt:Remove()
 		RemoveFromPathPointsTable( ply )
-		ply:ChatPrint( "#ac2_notify_removed_pathptn" )
-		if CLIENT then ply:EmitSound( "buttons/button15.wav" ) end
+		SendNotifyClient( ply, "#ac2_notify_removed_pathptn" )
+	end
+end
+
+function RemoveAimedPathPoint( ply, ent )
+	local PathTBL = GetPathPointsTBL( ply )
+	if PathTBL and PathTBL[#PathTBL] != nil then
+		for k,v in pairs ( PathTBL ) do
+			if v == ent:EntIndex() then
+				table.remove(PathTBL, k)
+				ent:Remove()
+				SendNewPathPointTable( ply, PathTBL )
+				SendNotifyClient( ply, "#ac2_notify_removed_pathptn" )
+			end
+		end
 	end
 end
 
 if CLIENT then
-
+	local function NotifyHint( ply, msg )
+		notification.AddLegacy( msg, NOTIFY_UNDO, 2 )
+		surface.PlaySound( "buttons/button15.wav" )
+	end
+	net.Receive( "NotifyPathPointRMV", function()
+		local ply = net.ReadEntity()
+		local msg = net.ReadString()
+		NotifyHint( ply, msg )
+	end )
 end
 
 if SERVER then
 	util.AddNetworkString( "DrawPathPointLine" )
+	util.AddNetworkString( "NotifyPathPointRMV" )
 
 	function CreatePathPoint( ply, pos )
 		pathpnt = ents.Create( "ac2_pathpoint" )
