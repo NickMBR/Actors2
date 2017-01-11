@@ -19,25 +19,33 @@ function ENT:Initialize()
 		
 		self:SetMaterial("models/debug/debugwhite")
 		self:SetRenderMode( RENDERMODE_TRANSALPHA )
-		self:SetColor( Color( 30, 60, 210, 150 ) )
+		--self:SetColor( Color( 30, 60, 210, 255 ) )
 		self:DrawShadow( false )
 	end
-	
-	-- Removes the drive, persist and collision properties of the entity
-	hook.Add( "CanProperty", "prevent_path_property", function( ply, property, ent )
+
+	if ( #PathPointLinesTBL == 1 ) then self:SetColor( Color( 225, 150, 55, 255 ) ) else self:SetColor( Color( 30, 60, 210, 255 ) ) end
+
+	-- Allows only the Actors2 properties to be shown
+	--[[hook.Add( "CanProperty", "prevent_path_property", function( ply, property, ent )
 		if ( ent:GetClass() == "ac2_pathpoint" ) then
-			if ( property == "drive" or property == "persist" or property == "collision" or property == "remover") then 
-				return false 
-			end
+			if property == "ac2_p_editactor" or property == "ac2_p_actionpoint" then return true else return false end
 		else
 			return true
 		end
-	end )
+	end )]]--
+end
+
+function ENT:CanProperty( ply, property )
+	if property == "ac2_p_editactor" and self:GetColor().r == 225 and self:GetColor().g == 150 then return true
+	elseif property == "ac2_p_actionpoint" and self:GetColor().r == 30 and self:GetColor().g == 60 then return true
+	elseif property == "ac2_p_editactionpoint" and self:GetColor().r == 225 and self:GetColor().g == 54 then return true
+	else return false end
+	return false
 end
 
 -- Prevents the use of any Gmod tools on this entity
 function ENT:CanTool( ply, tr, tool )
-	if IsValid( tr.Entity ) and tr.Entity:GetClass() == "ac2_pathpoint" then
+	if IsValid( tr.Entity ) and tr.Entity:GetClass() == "ac2_basepoint" then
 		return false
 	end
 end
@@ -57,7 +65,8 @@ function ENT:Draw()
 		local weapon_name = wep:GetClass()
 		if ( weapon_name == "gmod_camera" ) then return end
 	end
-	BaseClass.Draw( self )
+
+	self:DrawModel()
 
 	-- Draws a line between the Path Points
 	if ( #PathPointLinesTBL >= 2 ) then
@@ -68,4 +77,8 @@ function ENT:Draw()
 			render.DrawBeam( PathP1:GetPos()+PathPointLineOffset, PathP2:GetPos()+PathPointLineOffset, 3, 1, 1, Color(255, 255, 255, 255) )
 		end
 	end
+end
+
+function ENT:Think()
+	
 end
