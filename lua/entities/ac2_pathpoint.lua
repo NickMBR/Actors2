@@ -45,7 +45,7 @@ function ChangePathColors()
 	for k, v in pairs (PathPointLinesTBL) do
 		if k != PathPointsSelector then
 			for ke, va in pairs (v) do
-				ents.GetByIndex(va):SetColor( Color( 120, 120, 120, 255 ) )
+				ents.GetByIndex(va):SetColor( Color( 210, 210, 210, 255 ) )
 			end
 		else
 			for ke, va in pairs (v) do

@@ -4,39 +4,53 @@
 A2LANG = ""
 AC2_LANG = {
 	["en"] = {
+		-- Path Maker Tool
 		["ac2_tool_category"]				= "Actors2",
 		["ac2_tool_pathmaker"]				= "Path Maker",
 		["ac2_tool_pm_leftclick"]			= "Spawn Path Point",
+		["ac2_tool_pm_leftclick1"]			= "Apply Rotation",
 		["ac2_tool_pm_rightclick"]			= "Remove Path Point",
 		["ac2_tool_pm_shiftreload"]			= "Toggle Selection Between Paths",
 		["ac2_tool_pm_shiftleft"]			= "Change Path Facing Angle",
+		["ac2_tool_pm_shiftleft1"]			= "Apply Locked Rotation",
 		["ac2_tool_pm_reload"]				= "Add New Path",
 		["ac2_tool_pm_info"]				= "Use the Context Menu for more options",
-		["ac2_tool_pm_rotation"]			= "Rotate with the Mouse, Mouse1 to apply",
+		["ac2_tool_pm_rotation"]			= "Press Shift to lock the rotation in 45 degrees",
 		["ac2_tool_pm_desc"]				= "Creates the path of the Actors.",
 		["ac2_tool_pm_remove_pathpnt"]		= "Removed Path Point",
+
+		-- Properties
 		["ac2_properties_ac2_editactor"]	= "Edit Actor",
 		["ac2_properties_ac2_actionpoint"]	= "Transform to Action Point",
 		["ac2_properties_ac2_editaction"]	= "Edit Action Point",
+
+		-- Notifications
 		["ac2_tool_pm_sel_nopatht"]			= "There's no Paths to Select",
 		["ac2_tool_pm_sel_newpath"]			= "New Path was Added",
 		["ac2_tool_pm_no_navmesh"]			= "This map doesn't have a Nav Mesh, Actors2 will not work correctly",
 	},
 	["pt-BR"] = {
+		-- Ferramenta de Trajeto
 		["ac2_tool_category"]				= "Atores2",
 		["ac2_tool_pathmaker"]				= "Trajeto",
 		["ac2_tool_pm_leftclick"]			= "Adicionar Ponto de Trajeto",
+		["ac2_tool_pm_leftclick1"]			= "Aplicar Rotação",
 		["ac2_tool_pm_rightclick"]			= "Remover Ponto de Trajeto",
 		["ac2_tool_pm_shiftreload"]			= "Alternar Seleção Entre Trajetos",
 		["ac2_tool_pm_shiftleft"]			= "Trocar Ângulo de Visão do Trajeto",
+		["ac2_tool_pm_shiftleft1"]			= "Aplicar Rotação Travada",
 		["ac2_tool_pm_reload"]				= "Adicionar Novo Trajeto",
 		["ac2_tool_pm_info"]				= "Use o Menu de Contexto para mais opções",
-		["ac2_tool_pm_rotation"]			= "Rotacione com o Mouse, Mouse1 para aplicar",
+		["ac2_tool_pm_rotation"]			= "Pressione Shift para travar a rotação em 45 graus",
 		["ac2_tool_pm_desc"]				= "Cria o trajeto para os Atores.",
 		["ac2_tool_pm_remove_pathpnt"]		= "Ponto de Trajeto Removido",
+
+		-- Propriedades
 		["ac2_properties_ac2_editactor"]	= "Editar Ator",
 		["ac2_properties_ac2_actionpoint"]	= "Transformar em Ponto de Ação",
 		["ac2_properties_ac2_editaction"]	= "Editar Ponto de Ação",
+
+		-- Notificações
 		["ac2_tool_pm_sel_nopatht"]			= "Não há Trajetos para Selecionar",
 		["ac2_tool_pm_sel_newpath"]			= "Novo Trajeto foi Adicionado",
 		["ac2_tool_pm_no_navmesh"]			= "Esse mapa não possui um Nav Mesh, Atores2 não funcionará corretamente",

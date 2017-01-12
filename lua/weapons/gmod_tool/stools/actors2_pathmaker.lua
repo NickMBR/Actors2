@@ -57,20 +57,15 @@ if ( CLIENT ) then
 	TOOL.ConfigName	= ""
 	
 	TOOL.Information = {
-		"left",
-		"right",
-		"reload",
-		{ 
-		name  = "shift_left",
-		icon2  = "gui/e.png",
-		icon = "gui/lmb.png",
-		},
-		{ 
-		name  = "shift_reload",
-		icon2  = "gui/e.png",
-		icon = "gui/r.png",
-		},
-		"info",
+		{ name = "left", stage = 0 },
+		{ name = "left_1", stage = 1 },
+		{ name = "right", stage = 0 },
+		{ name = "reload", stage = 0 },
+		{ name  = "shift_left", icon2  = "gui/e.png", icon = "gui/lmb.png", stage = 0 },
+		{ name  = "shift_left_1", icon2  = "gui/e.png", icon = "gui/lmb.png", stage = 1 },
+		{ name  = "shift_reload", stage = 0, icon2  = "gui/e.png", icon = "gui/r.png" },
+		{ name = "info", stage = 0 },
+		{ name = "info_1", stage = 1 }
 	}
 	
 	-- Tool Keys
@@ -86,7 +81,9 @@ if ( CLIENT ) then
 	language.Add("tool.actors2_pathmaker.0", AC2_LANG[A2LANG]["ac2_tool_pm_info"])
 
 	-- Stage 1 of the tool, used when rotating
-	language.Add("tool.actors2_pathmaker.1", AC2_LANG[A2LANG]["ac2_tool_pm_rotation"])
+	language.Add("tool.actors2_pathmaker.left_1", AC2_LANG[A2LANG]["ac2_tool_pm_leftclick1"])
+	language.Add("tool.actors2_pathmaker.shift_left_1", AC2_LANG[A2LANG]["ac2_tool_pm_shiftleft1"])
+	language.Add("tool.actors2_pathmaker.info_1", AC2_LANG[A2LANG]["ac2_tool_pm_rotation"])
 
 	-- Cache strings for serverside usage
 	language.Add("ac2_notify_removed_pathptn", AC2_LANG[A2LANG]["ac2_tool_pm_remove_pathpnt"])
@@ -131,34 +128,32 @@ function TOOL:LeftClick( trace )
 	local numobj = self:NumObjects()
 	degrees = 0
 
-	if ( ply:KeyDown( IN_USE ) or ply:KeyDown( IN_SPEED ) ) then
+	if ply:KeyDown( IN_USE ) or ply:KeyDown( IN_SPEED ) then
 		if trace.HitWorld then return false end
 		if trace.Entity:GetClass() == "ac2_pathpoint" then
 			if SERVER and not util.IsValidPhysicsObject( trace.Entity, trace.PhysicsBone ) then return false end
 
 			if numobj == 0 then
-				if (CLIENT) then return true end
+				if CLIENT then return true end
 				SendNotifyClient( ply, "#tool.actors2_pathmaker.1", 0, "buttons/button17.wav", 4 )
 				local Phys = trace.Entity:GetPhysicsObjectNum( trace.PhysicsBone )
 				if IsValid( Phys ) then
 					Phys:EnableMotion( false )
 				end
 				self:SetObject( 1, trace.Entity, trace.HitPos, Phys, trace.PhysicsBone, trace.HitNormal )
-				self:SetStage(1)
+				self:SetStage( 1 )
 			else
 				self:ClearObjects()
 			end
-			
-			ply:ChatPrint(tostring(trace.Entity:GetAngles()))
 
 		end
-	elseif self:NumObjects() > 0 and IsValid(self:GetEnt(1)) then
+	elseif self:NumObjects() > 0 and IsValid( self:GetEnt(1) ) then
 		self:ClearObjects()
 	else
 		if trace.Entity:GetClass() == "ac2_pathpoint" then return false end
 		local PathPoint = CreatePathPoint( ply, trace.HitPos )
-		BuildActorTable(ply, pathpnt)
-		PathSelector = GetConVar("actors2_pathmaker_ac2_pathselector"):GetInt()
+		BuildActorTable( ply, pathpnt )
+		PathSelector = GetConVar( "actors2_pathmaker_ac2_pathselector" ):GetInt()
 	end
 
 	return true
@@ -226,14 +221,15 @@ function TOOL:Reload( trace )
 end
 
 function TOOL:Think()
-	if (self:NumObjects() > 0) then
-		if ( SERVER ) then
+	-- Rotate the Selected Path Point
+	if self:NumObjects() > 0 then
+		if SERVER then
 			local Phys2 = self:GetPhys(1)
-			local Norm2 = self:GetNormal(1)
+			local Norm2 = Vector( 0, 0, 1 ) -- Forces Z axis
 			local cmd = self:GetOwner():GetCurrentCommand()
 			degrees = degrees + cmd:GetMouseX() * 0.05
 			local ra = degrees
-			if (self:GetOwner():KeyDown(IN_SPEED)) then ra = math.Round(ra/45)*45 end
+			if self:GetOwner():KeyDown(IN_SPEED) then ra = math.Round(ra/45)*45 end
 			local Ang = Norm2:Angle()
 			Ang.pitch = Ang.pitch + 90
 			Ang:RotateAroundAxis(Norm2, ra)
