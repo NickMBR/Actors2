@@ -9,6 +9,7 @@ AC2_LANG = {
 		["ac2_tool_pm_leftclick"]			= "Spawn Path Point",
 		["ac2_tool_pm_rightclick"]			= "Remove Path Point",
 		["ac2_tool_pm_shiftreload"]			= "Toggle Selection Between Paths",
+		["ac2_tool_pm_shiftleft"]			= "Change Path Facing Angle",
 		["ac2_tool_pm_reload"]				= "Add New Path",
 		["ac2_tool_pm_info"]				= "Use the Context Menu for more options",
 		["ac2_tool_pm_desc"]				= "Creates the path of the Actors.",
@@ -17,6 +18,7 @@ AC2_LANG = {
 		["ac2_properties_ac2_actionpoint"]	= "Transform to Action Point",
 		["ac2_properties_ac2_editaction"]	= "Edit Action Point",
 		["ac2_tool_pm_sel_nopatht"]			= "There's no Paths to Select",
+		["ac2_tool_pm_sel_newpath"]			= "New Path was Added",
 	},
 	["pt-BR"] = {
 		["ac2_tool_category"]				= "Atores2",
@@ -24,6 +26,7 @@ AC2_LANG = {
 		["ac2_tool_pm_leftclick"]			= "Adicionar Ponto de Trajeto",
 		["ac2_tool_pm_rightclick"]			= "Remover Ponto de Trajeto",
 		["ac2_tool_pm_shiftreload"]			= "Alternar Seleção Entre Trajetos",
+		["ac2_tool_pm_shiftleft"]			= "Trocar Ângulo de Visão do Trajeto",
 		["ac2_tool_pm_reload"]				= "Adicionar Novo Trajeto",
 		["ac2_tool_pm_info"]				= "Use o Menu de Contexto para mais opções",
 		["ac2_tool_pm_desc"]				= "Cria o trajeto para os Atores.",
@@ -32,6 +35,7 @@ AC2_LANG = {
 		["ac2_properties_ac2_actionpoint"]	= "Transformar em Ponto de Ação",
 		["ac2_properties_ac2_editaction"]	= "Editar Ponto de Ação",
 		["ac2_tool_pm_sel_nopatht"]			= "Não há Trajetos para Selecionar",
+		["ac2_tool_pm_sel_newpath"]			= "Novo Trajeto foi Adicionado",
 	}
 }
 

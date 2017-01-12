@@ -23,8 +23,6 @@ function ENT:Initialize()
 		self:SetColor( Color( 30, 60, 210, 255 ) )
 		self:DrawShadow( false )
 	end
-
-	--if ( #PathPointLinesTBL == 1 ) then self:SetColor( Color( 225, 150, 55, 255 ) ) else self:SetColor( Color( 30, 60, 210, 255 ) ) end
 end
 
 -- Allows only the Actors2 properties to be shown
@@ -43,10 +41,29 @@ function ENT:CanTool( ply, tr, tool )
 	end
 end
 
+function ChangePathColors()
+	for k, v in pairs (PathPointLinesTBL) do
+		if k != PathPointsSelector then
+			for ke, va in pairs (v) do
+				ents.GetByIndex(va):SetColor( Color( 120, 120, 120, 255 ) )
+			end
+		else
+			for ke, va in pairs (v) do
+				if ke == 1 then 
+					ents.GetByIndex(va):SetColor( Color( 225, 150, 55, 255 ) )
+				else
+					ents.GetByIndex(va):SetColor( Color( 30, 60, 210, 255 ) )
+				end
+			end
+		end
+	end
+end
+
 if CLIENT then
 	net.Receive( "DrawPathPointLine", function()
 		PathPointLinesTBL = net.ReadTable()
 		PathPointsSelector = net.ReadDouble()
+		ChangePathColors()
 	end )
 end
 
@@ -68,26 +85,11 @@ function ENT:Draw()
 		for i = 2, #PathPointLinesTBL[PathPointsSelector] do
 			local PathP1 = ents.GetByIndex( PathPointLinesTBL[PathPointsSelector][i] )
 			local PathP2 = ents.GetByIndex( PathPointLinesTBL[PathPointsSelector][i-1] )
-			render.DrawBeam( PathP1:GetPos()+PathPointLineOffset, PathP2:GetPos()+PathPointLineOffset, 3, 1, 1, Color(255, 255, 255, 255) )
+			render.DrawLine( PathP1:GetPos()+PathPointLineOffset, PathP2:GetPos()+PathPointLineOffset, Color(255, 255, 255, 255), true)
 		end
 	end
 end
 
 function ENT:Think()
-	self:NextThink( CurTime() + 15 )
-	for k, v in pairs (PathPointLinesTBL) do
-		if k != PathPointsSelector then
-			for ke, va in pairs (v) do
-				ents.GetByIndex(va):SetColor( Color( 120, 120, 120, 255 ) )
-			end
-		else
-			for ke, va in pairs (v) do
-				if ke == 1 then 
-					ents.GetByIndex(va):SetColor( Color( 225, 150, 55, 255 ) )
-				else
-					ents.GetByIndex(va):SetColor( Color( 30, 60, 210, 255 ) )
-				end
-			end
-		end
-	end
+
 end

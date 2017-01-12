@@ -57,21 +57,27 @@ if ( CLIENT ) then
 	TOOL.ConfigName	= ""
 	
 	TOOL.Information = {
-		"info",
 		"left",
 		"right",
 		"reload",
+		{ 
+		name  = "shift_left",
+		icon2  = "gui/e.png",
+		icon = "gui/lmb.png",
+		},
 		{ 
 		name  = "shift_reload",
 		icon2  = "gui/e.png",
 		icon = "gui/r.png",
 		},
+		"info",
 	}
 	
 	-- Tool Keys
 	language.Add("tool.actors2_pathmaker.left", AC2_LANG[A2LANG]["ac2_tool_pm_leftclick"])
 	language.Add("tool.actors2_pathmaker.right", AC2_LANG[A2LANG]["ac2_tool_pm_rightclick"])
 	language.Add("tool.actors2_pathmaker.reload", AC2_LANG[A2LANG]["ac2_tool_pm_reload"])
+	language.Add("tool.actors2_pathmaker.shift_left", AC2_LANG[A2LANG]["ac2_tool_pm_shiftleft"])
 	language.Add("tool.actors2_pathmaker.shift_reload", AC2_LANG[A2LANG]["ac2_tool_pm_shiftreload"])
 	
 	-- Tool Descriptions
@@ -82,6 +88,7 @@ if ( CLIENT ) then
 	-- Custom Lang Strings
 	language.Add("ac2_notify_removed_pathptn", AC2_LANG[A2LANG]["ac2_tool_pm_remove_pathpnt"])
 	language.Add("ac2_notify_sel_nopath", AC2_LANG[A2LANG]["ac2_tool_pm_sel_nopatht"])
+	language.Add("ac2_notify_sel_newpath", AC2_LANG[A2LANG]["ac2_tool_pm_sel_newpath"])
 
 end
 
@@ -100,14 +107,27 @@ end
 function TOOL:LeftClick( trace )
 	if not trace.HitPos then return false end
 	if trace.Entity:IsPlayer() then return false end
-	if trace.Entity:GetClass() == "ac2_pathpoint" then return false end
 	if CLIENT then return true end
 	
 	local ply = self:GetOwner()
-	local PathPoint = CreatePathPoint( ply, trace.HitPos )
 
-	BuildActorTable(ply, pathpnt)
-	PathSelector = GetConVar("actors2_pathmaker_ac2_pathselector"):GetInt()
+	if ( ply:KeyDown( IN_USE ) or ply:KeyDown( IN_SPEED ) ) then
+		if trace.Entity:GetClass() == "ac2_pathpoint" then
+			--Rotate Path
+			local RotPath = trace.Entity
+			ply:ChatPrint(tostring(RotPath:GetAngles()))
+
+			local cmd = self:GetOwner():GetCurrentCommand()
+			local degrees = cmd:GetMouseX() * 0.05
+			local angle = RotPath:RotateAroundAxis( self.RotAxis, degrees )
+			RotPath:SetAngles( angle )
+		end
+	else
+		if trace.Entity:GetClass() == "ac2_pathpoint" then return false end
+		local PathPoint = CreatePathPoint( ply, trace.HitPos )
+		BuildActorTable(ply, pathpnt)
+		PathSelector = GetConVar("actors2_pathmaker_ac2_pathselector"):GetInt()
+	end
 
 	return true
 end
@@ -126,13 +146,10 @@ function TOOL:RightClick( trace )
 	else
 		RemovePathPoint( ply )
 	end
-	
-	--PrintTable(Actors2TBL)
-	ply:ChatPrint("Actual Paths: "..PathSelector.." Selected Path: "..PathCount)
 
+	-- Automatic selector when a path is completely removed
 	local AC2TP = CheckForPlayer( ply )
 	if PathSelector > 1 and next(Actors2TBL[AC2TP[1]][AC2TP[2]].PathPoints[PathCount]) == nil then
-		ply:ChatPrint("Empty Table on ID: "..PathCount)
 		table.remove( Actors2TBL[AC2TP[1]][AC2TP[2]].PathPoints, PathCount )
 		PathSelector = PathSelector - 1
 		RunConsoleCommand( "actors2_pathmaker_ac2_pathselector", PathSelector)
@@ -156,7 +173,6 @@ function TOOL:Reload( trace )
 			else
 				if PathCount > 1 then PathCount = PathCount - 1 else PathCount = PathSelector end
 				SendNewPathPointTable( ply )
-				--SendNotifyClient( ply, "Changed Selection", 3, "buttons/button17.wav" )
 			end
 		end
 	else
@@ -167,8 +183,9 @@ function TOOL:Reload( trace )
 				PathSelector = PathSelector + 1
 				Actors2TBL[AC2T[1]][AC2T[2]].PathPoints[PathSelector] = {}
 				RunConsoleCommand( "actors2_pathmaker_ac2_pathselector", PathSelector)
-				SendNotifyClient( ply, "Added New Path", 3, "buttons/button17.wav" )
+				SendNotifyClient( ply, "#ac2_notify_sel_newpath", 3, "buttons/button17.wav" )
 				PathCount = PathSelector
+				SendNewPathPointTable( ply )
 			end
 		end
 	end
