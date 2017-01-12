@@ -25,7 +25,8 @@ TOOL.ClientConVar =
 -- ## ------------------------------------------------------------------------------ ## --
 local Actors2TBL = {}
 local PathPointsTBL = {}
-local PathSelector = GetConVar("actors2_pathmaker_ac2_pathselector"):GetInt()
+local PathSelector = 1
+local PathCount = 1
 
 -- ## ----------------------------------- Actors2 ---------------------------------- ## --
 	-- Resources
@@ -41,6 +42,7 @@ if SERVER then
 		PathPointsTBL = {}
 		RunConsoleCommand( "actors2_pathmaker_ac2_pathselector", 1)
 		PathSelector = 1
+		PathCount = 1
 	end
 	hook.Add( "PostCleanupMap", "AC2PostCleanupMap", ClearTablesWhenSVCleanUP )
 end
@@ -58,12 +60,12 @@ if ( CLIENT ) then
 		"info",
 		"left",
 		"right",
+		"reload",
 		{ 
 		name  = "shift_reload",
 		icon2  = "gui/e.png",
 		icon = "gui/r.png",
 		},
-		"reload",
 	}
 	
 	-- Tool Keys
@@ -105,7 +107,7 @@ function TOOL:LeftClick( trace )
 	local PathPoint = CreatePathPoint( ply, trace.HitPos )
 
 	BuildActorTable(ply, pathpnt)
-	PrintTable(Actors2TBL)
+	PathSelector = GetConVar("actors2_pathmaker_ac2_pathselector"):GetInt()
 
 	return true
 end
@@ -117,13 +119,25 @@ function TOOL:RightClick( trace )
 	--if not trace.HitPos then return false end
 	--if trace.Entity:IsPlayer() then return false end
 	if CLIENT then return true end
-
 	local ply = self:GetOwner()
 
 	if trace.Entity:GetClass() == "ac2_pathpoint" then
 		RemoveAimedPathPoint( ply, trace.Entity)
 	else
 		RemovePathPoint( ply )
+	end
+	
+	--PrintTable(Actors2TBL)
+	ply:ChatPrint("Actual Paths: "..PathSelector.." Selected Path: "..PathCount)
+
+	local AC2TP = CheckForPlayer( ply )
+	if PathSelector > 1 and next(Actors2TBL[AC2TP[1]][AC2TP[2]].PathPoints[PathCount]) == nil then
+		ply:ChatPrint("Empty Table on ID: "..PathCount)
+		table.remove( Actors2TBL[AC2TP[1]][AC2TP[2]].PathPoints, PathCount )
+		PathSelector = PathSelector - 1
+		RunConsoleCommand( "actors2_pathmaker_ac2_pathselector", PathSelector)
+		PathCount = PathSelector
+		SendNewPathPointTable( ply )
 	end
 	
 	return false
@@ -140,7 +154,9 @@ function TOOL:Reload( trace )
 			if #Actors2TBL[AC2[1]][AC2[2]].PathPoints <= 1 then
 				SendNotifyClient( ply, "#ac2_notify_sel_nopath", 1, "buttons/button16.wav" )
 			else
-				-- Select new path
+				if PathCount > 1 then PathCount = PathCount - 1 else PathCount = PathSelector end
+				SendNewPathPointTable( ply )
+				--SendNotifyClient( ply, "Changed Selection", 3, "buttons/button17.wav" )
 			end
 		end
 	else
@@ -152,6 +168,7 @@ function TOOL:Reload( trace )
 				Actors2TBL[AC2T[1]][AC2T[2]].PathPoints[PathSelector] = {}
 				RunConsoleCommand( "actors2_pathmaker_ac2_pathselector", PathSelector)
 				SendNotifyClient( ply, "Added New Path", 3, "buttons/button17.wav" )
+				PathCount = PathSelector
 			end
 		end
 	end
@@ -160,7 +177,7 @@ function TOOL:Reload( trace )
 end
 
 function TOOL:Think()
-	PathSelector = GetConVar("actors2_pathmaker_ac2_pathselector"):GetInt()
+	
 end
 
 -- ## ----------------------------------- Actors2 ---------------------------------- ## --
@@ -191,7 +208,7 @@ local function PopulateActorTable( ply )
 		{
 			PathPoints = 
 			{
-				[PathSelector] = {}
+				[PathCount] = {}
 			}
 		}
 	}
@@ -201,15 +218,17 @@ end
 local function GetPathPointsTBL( ply )
 	local TempTBL = CheckForPlayer( ply )
 	if TempTBL then
-		local TempPathTBL = Actors2TBL[TempTBL[1]][TempTBL[2]].PathPoints[PathSelector]
+		local TempPathTBL = Actors2TBL[TempTBL[1]][TempTBL[2]].PathPoints[PathCount]
 		return TempPathTBL
 	end
 end
 
-local function SendNewPathPointTable( ply, t )
+function SendNewPathPointTable( ply )
+	local TempTBL = CheckForPlayer( ply )
+
 	net.Start( "DrawPathPointLine" )
-		net.WriteTable( t )
-		net.WriteDouble( PathSelector)
+		net.WriteTable( Actors2TBL[TempTBL[1]][TempTBL[2]].PathPoints )
+		net.WriteDouble( PathCount )
 	net.Send( ply )
 end
 
@@ -217,7 +236,7 @@ local function PopulatePathPointsTable( ply, ent )
 	local TempPTBL = GetPathPointsTBL( ply )
 	if TempPTBL then
 		table.insert(TempPTBL, ent:EntIndex())
-		SendNewPathPointTable( ply, TempPTBL )
+		SendNewPathPointTable( ply )
 	end
 end
 
@@ -225,7 +244,7 @@ local function RemoveFromPathPointsTable( ply )
 	local TBLKeyToRemove = GetPathPointsTBL( ply )
 	if TBLKeyToRemove then 
 		TBLKeyToRemove[#TBLKeyToRemove] = nil
-		SendNewPathPointTable( ply, TBLKeyToRemove )
+		SendNewPathPointTable( ply )
 	end
 end
 
@@ -265,9 +284,9 @@ function RemoveAimedPathPoint( ply, ent )
 	if PathTBL and PathTBL[#PathTBL] != nil then
 		for k,v in pairs ( PathTBL ) do
 			if v == ent:EntIndex() then
-				table.remove(PathTBL, k)
+				table.remove(PathTBL, k )
 				ent:Remove()
-				SendNewPathPointTable( ply, PathTBL )
+				SendNewPathPointTable( ply )
 				SendNotifyClient( ply, "#ac2_notify_removed_pathptn", 2, "buttons/button15.wav" )
 			end
 		end

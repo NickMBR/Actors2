@@ -63,18 +63,31 @@ function ENT:Draw()
 	self:DrawModel()
 
 	-- Draws a line between the Path Points
-	if ( #PathPointLinesTBL >= 2 ) then
+	if #PathPointLinesTBL[PathPointsSelector] >= 2 then
 		render.SetMaterial( LaserMat )
-		for i = 2, #PathPointLinesTBL do
-			local PathP1 = ents.GetByIndex( PathPointLinesTBL[i] )
-			local PathP2 = ents.GetByIndex( PathPointLinesTBL[i-1] )
+		for i = 2, #PathPointLinesTBL[PathPointsSelector] do
+			local PathP1 = ents.GetByIndex( PathPointLinesTBL[PathPointsSelector][i] )
+			local PathP2 = ents.GetByIndex( PathPointLinesTBL[PathPointsSelector][i-1] )
 			render.DrawBeam( PathP1:GetPos()+PathPointLineOffset, PathP2:GetPos()+PathPointLineOffset, 3, 1, 1, Color(255, 255, 255, 255) )
 		end
 	end
 end
 
 function ENT:Think()
-	if #PathPointLinesTBL >= 2 then
-		ents.GetByIndex( PathPointLinesTBL[1] ):SetColor( Color( 225, 150, 55, 255 ) )
+	self:NextThink( CurTime() + 15 )
+	for k, v in pairs (PathPointLinesTBL) do
+		if k != PathPointsSelector then
+			for ke, va in pairs (v) do
+				ents.GetByIndex(va):SetColor( Color( 120, 120, 120, 255 ) )
+			end
+		else
+			for ke, va in pairs (v) do
+				if ke == 1 then 
+					ents.GetByIndex(va):SetColor( Color( 225, 150, 55, 255 ) )
+				else
+					ents.GetByIndex(va):SetColor( Color( 30, 60, 210, 255 ) )
+				end
+			end
+		end
 	end
 end
