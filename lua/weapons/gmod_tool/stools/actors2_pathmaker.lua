@@ -27,11 +27,11 @@ local Actors2TBL = {}
 local PathPointsTBL = {}
 local PathSelector = 1
 local PathCount = 1
+local degrees = 0
 
 -- ## ----------------------------------- Actors2 ---------------------------------- ## --
 	-- Resources
 -- ## ------------------------------------------------------------------------------ ## --
-resource.AddFile( "buttons/button15.wav" )
 
 -- ## ----------------------------------- Actors2 ---------------------------------- ## --
 	-- Hooks
@@ -85,10 +85,14 @@ if ( CLIENT ) then
 	language.Add("tool.actors2_pathmaker.desc", AC2_LANG[A2LANG]["ac2_tool_pm_desc"])
 	language.Add("tool.actors2_pathmaker.0", AC2_LANG[A2LANG]["ac2_tool_pm_info"])
 
-	-- Custom Lang Strings
+	-- Stage 1 of the tool, used when rotating
+	language.Add("tool.actors2_pathmaker.1", AC2_LANG[A2LANG]["ac2_tool_pm_rotation"])
+
+	-- Cache strings for serverside usage
 	language.Add("ac2_notify_removed_pathptn", AC2_LANG[A2LANG]["ac2_tool_pm_remove_pathpnt"])
 	language.Add("ac2_notify_sel_nopath", AC2_LANG[A2LANG]["ac2_tool_pm_sel_nopatht"])
 	language.Add("ac2_notify_sel_newpath", AC2_LANG[A2LANG]["ac2_tool_pm_sel_newpath"])
+	language.Add("ac2_notify_no_navmesh", AC2_LANG[A2LANG]["ac2_tool_pm_no_navmesh"])
 
 end
 
@@ -96,8 +100,22 @@ end
 	-- Deploy
 -- ## ------------------------------------------------------------------------------ ## --
 function TOOL:Deploy()
-	
+	local ply = self:GetOwner()
+
+	-- If there's no nav mesh, notify the client
+	if not navmesh.IsLoaded() then
+		SendNotifyClient( ply, "#ac2_notify_no_navmesh", 1, "buttons/button10.wav", 7 )
+	end
 end
+
+function TOOL:Holster()
+	self:ClearObjects()
+end
+
+-- ## ----------------------------------- Actors2 ---------------------------------- ## --
+	-- Rotation Functions
+	-- 1. From Precision Tool by: Wrex, Hunted, [XNG] Sheders
+-- ## ------------------------------------------------------------------------------ ## --
 
 -- ## ----------------------------------- Actors2 ---------------------------------- ## --
 	-- Path Point Creator
@@ -110,18 +128,32 @@ function TOOL:LeftClick( trace )
 	if CLIENT then return true end
 	
 	local ply = self:GetOwner()
+	local numobj = self:NumObjects()
+	degrees = 0
 
 	if ( ply:KeyDown( IN_USE ) or ply:KeyDown( IN_SPEED ) ) then
+		if trace.HitWorld then return false end
 		if trace.Entity:GetClass() == "ac2_pathpoint" then
-			--Rotate Path
-			local RotPath = trace.Entity
-			ply:ChatPrint(tostring(RotPath:GetAngles()))
+			if SERVER and not util.IsValidPhysicsObject( trace.Entity, trace.PhysicsBone ) then return false end
 
-			local cmd = self:GetOwner():GetCurrentCommand()
-			local degrees = cmd:GetMouseX() * 0.05
-			local angle = RotPath:RotateAroundAxis( self.RotAxis, degrees )
-			RotPath:SetAngles( angle )
+			if numobj == 0 then
+				if (CLIENT) then return true end
+				SendNotifyClient( ply, "#tool.actors2_pathmaker.1", 0, "buttons/button17.wav", 4 )
+				local Phys = trace.Entity:GetPhysicsObjectNum( trace.PhysicsBone )
+				if IsValid( Phys ) then
+					Phys:EnableMotion( false )
+				end
+				self:SetObject( 1, trace.Entity, trace.HitPos, Phys, trace.PhysicsBone, trace.HitNormal )
+				self:SetStage(1)
+			else
+				self:ClearObjects()
+			end
+			
+			ply:ChatPrint(tostring(trace.Entity:GetAngles()))
+
 		end
+	elseif self:NumObjects() > 0 and IsValid(self:GetEnt(1)) then
+		self:ClearObjects()
 	else
 		if trace.Entity:GetClass() == "ac2_pathpoint" then return false end
 		local PathPoint = CreatePathPoint( ply, trace.HitPos )
@@ -169,7 +201,7 @@ function TOOL:Reload( trace )
 		if next(Actors2TBL) != nil then
 			local AC2 = CheckForPlayer( ply )
 			if #Actors2TBL[AC2[1]][AC2[2]].PathPoints <= 1 then
-				SendNotifyClient( ply, "#ac2_notify_sel_nopath", 1, "buttons/button16.wav" )
+				SendNotifyClient( ply, "#ac2_notify_sel_nopath", 1, "buttons/button16.wav", 2 )
 			else
 				if PathCount > 1 then PathCount = PathCount - 1 else PathCount = PathSelector end
 				SendNewPathPointTable( ply )
@@ -183,7 +215,7 @@ function TOOL:Reload( trace )
 				PathSelector = PathSelector + 1
 				Actors2TBL[AC2T[1]][AC2T[2]].PathPoints[PathSelector] = {}
 				RunConsoleCommand( "actors2_pathmaker_ac2_pathselector", PathSelector)
-				SendNotifyClient( ply, "#ac2_notify_sel_newpath", 3, "buttons/button17.wav" )
+				SendNotifyClient( ply, "#ac2_notify_sel_newpath", 0, "buttons/button17.wav", 2 )
 				PathCount = PathSelector
 				SendNewPathPointTable( ply )
 			end
@@ -194,7 +226,21 @@ function TOOL:Reload( trace )
 end
 
 function TOOL:Think()
-	
+	if (self:NumObjects() > 0) then
+		if ( SERVER ) then
+			local Phys2 = self:GetPhys(1)
+			local Norm2 = self:GetNormal(1)
+			local cmd = self:GetOwner():GetCurrentCommand()
+			degrees = degrees + cmd:GetMouseX() * 0.05
+			local ra = degrees
+			if (self:GetOwner():KeyDown(IN_SPEED)) then ra = math.Round(ra/45)*45 end
+			local Ang = Norm2:Angle()
+			Ang.pitch = Ang.pitch + 90
+			Ang:RotateAroundAxis(Norm2, ra)
+			Phys2:SetAngles( Ang )
+			Phys2:Wake()
+		end
+	end
 end
 
 -- ## ----------------------------------- Actors2 ---------------------------------- ## --
@@ -265,11 +311,12 @@ local function RemoveFromPathPointsTable( ply )
 	end
 end
 
-function SendNotifyClient( ply, msg, type, snd )
+function SendNotifyClient( ply, msg, type, snd, dur )
 	net.Start( "NotifyPathPointRMV" )
 		net.WriteString( msg )
 		net.WriteDouble( type)
 		net.WriteString( snd )
+		net.WriteDouble( dur )
 	net.Send( ply )
 end
 
@@ -292,7 +339,7 @@ function RemovePathPoint( ply )
 		local LastEnt = ents.GetByIndex( PathTBL[#PathTBL] )
 		LastEnt:Remove()
 		RemoveFromPathPointsTable( ply )
-		SendNotifyClient( ply, "#ac2_notify_removed_pathptn", 2, "buttons/button15.wav" )
+		SendNotifyClient( ply, "#ac2_notify_removed_pathptn", 2, "buttons/button15.wav", 2 )
 	end
 end
 
@@ -304,23 +351,28 @@ function RemoveAimedPathPoint( ply, ent )
 				table.remove(PathTBL, k )
 				ent:Remove()
 				SendNewPathPointTable( ply )
-				SendNotifyClient( ply, "#ac2_notify_removed_pathptn", 2, "buttons/button15.wav" )
+				SendNotifyClient( ply, "#ac2_notify_removed_pathptn", 2, "buttons/button15.wav", 2 )
 			end
 		end
 	end
 end
 
 if CLIENT then
-	local function NotifyHint( msg, type, snd )
-		notification.AddLegacy( msg, type, 2 )
+	local function NotifyHint( msg, type, snd, dur )
+		notification.AddLegacy( msg, type, dur )
 		surface.PlaySound( snd )
 	end
 	net.Receive( "NotifyPathPointRMV", function()
 		local msg = net.ReadString()
 		local type = net.ReadDouble()
 		local snd = net.ReadString()
-		NotifyHint( msg, type, snd )
+		local dur = net.ReadDouble()
+		NotifyHint( msg, type, snd, dur )
 	end )
+
+	function TOOL:FreezeMovement()
+		return self:GetStage() == 1
+	end
 end
 
 if SERVER then

@@ -12,6 +12,7 @@ AC2_LANG = {
 		["ac2_tool_pm_shiftleft"]			= "Change Path Facing Angle",
 		["ac2_tool_pm_reload"]				= "Add New Path",
 		["ac2_tool_pm_info"]				= "Use the Context Menu for more options",
+		["ac2_tool_pm_rotation"]			= "Rotate with the Mouse, Mouse1 to apply",
 		["ac2_tool_pm_desc"]				= "Creates the path of the Actors.",
 		["ac2_tool_pm_remove_pathpnt"]		= "Removed Path Point",
 		["ac2_properties_ac2_editactor"]	= "Edit Actor",
@@ -19,6 +20,7 @@ AC2_LANG = {
 		["ac2_properties_ac2_editaction"]	= "Edit Action Point",
 		["ac2_tool_pm_sel_nopatht"]			= "There's no Paths to Select",
 		["ac2_tool_pm_sel_newpath"]			= "New Path was Added",
+		["ac2_tool_pm_no_navmesh"]			= "This map doesn't have a Nav Mesh, Actors2 will not work correctly",
 	},
 	["pt-BR"] = {
 		["ac2_tool_category"]				= "Atores2",
@@ -29,6 +31,7 @@ AC2_LANG = {
 		["ac2_tool_pm_shiftleft"]			= "Trocar Ângulo de Visão do Trajeto",
 		["ac2_tool_pm_reload"]				= "Adicionar Novo Trajeto",
 		["ac2_tool_pm_info"]				= "Use o Menu de Contexto para mais opções",
+		["ac2_tool_pm_rotation"]			= "Rotacione com o Mouse, Mouse1 para aplicar",
 		["ac2_tool_pm_desc"]				= "Cria o trajeto para os Atores.",
 		["ac2_tool_pm_remove_pathpnt"]		= "Ponto de Trajeto Removido",
 		["ac2_properties_ac2_editactor"]	= "Editar Ator",
@@ -36,6 +39,7 @@ AC2_LANG = {
 		["ac2_properties_ac2_editaction"]	= "Editar Ponto de Ação",
 		["ac2_tool_pm_sel_nopatht"]			= "Não há Trajetos para Selecionar",
 		["ac2_tool_pm_sel_newpath"]			= "Novo Trajeto foi Adicionado",
+		["ac2_tool_pm_no_navmesh"]			= "Esse mapa não possui um Nav Mesh, Atores2 não funcionará corretamente",
 	}
 }
 
