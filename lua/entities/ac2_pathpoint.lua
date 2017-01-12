@@ -4,6 +4,7 @@ DEFINE_BASECLASS( "base_gmodentity" )
 ENT.Spawnable = false
 local LaserMat = Material("trails/laser")
 local PathPointLinesTBL = {}
+local PathPointsSelector = 0
 local PathPointLineOffset = Vector(0,0,2)
 
 function ENT:Initialize()
@@ -45,6 +46,7 @@ end
 if CLIENT then
 	net.Receive( "DrawPathPointLine", function()
 		PathPointLinesTBL = net.ReadTable()
+		PathPointsSelector = net.ReadDouble()
 	end )
 end
 

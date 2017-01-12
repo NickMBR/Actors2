@@ -11,8 +11,21 @@
 	--	GM Crashes: 0
 -- ## ------------------------------------------------------------------------------ ## --
 
+-- ## ----------------------------------- Actors2 ---------------------------------- ## --
+	-- Persisting Client Variables
+-- ## ------------------------------------------------------------------------------ ## --
+TOOL.ClientConVar =
+{
+	-- Selection
+	[ "ac2_pathselector" ] = 1,
+}
+
+-- ## ----------------------------------- Actors2 ---------------------------------- ## --
+	-- Variables
+-- ## ------------------------------------------------------------------------------ ## --
 local Actors2TBL = {}
 local PathPointsTBL = {}
+local PathSelector = GetConVar("actors2_pathmaker_ac2_pathselector"):GetInt()
 
 -- ## ----------------------------------- Actors2 ---------------------------------- ## --
 	-- Resources
@@ -26,6 +39,8 @@ if SERVER then
 	local function ClearTablesWhenSVCleanUP()
 		Actors2TBL = {}
 		PathPointsTBL = {}
+		RunConsoleCommand( "actors2_pathmaker_ac2_pathselector", 1)
+		PathSelector = 1
 	end
 	hook.Add( "PostCleanupMap", "AC2PostCleanupMap", ClearTablesWhenSVCleanUP )
 end
@@ -54,8 +69,8 @@ if ( CLIENT ) then
 	-- Tool Keys
 	language.Add("tool.actors2_pathmaker.left", AC2_LANG[A2LANG]["ac2_tool_pm_leftclick"])
 	language.Add("tool.actors2_pathmaker.right", AC2_LANG[A2LANG]["ac2_tool_pm_rightclick"])
-	language.Add("tool.actors2_pathmaker.shift_reload", AC2_LANG[A2LANG]["ac2_tool_pm_shiftreload"])
 	language.Add("tool.actors2_pathmaker.reload", AC2_LANG[A2LANG]["ac2_tool_pm_reload"])
+	language.Add("tool.actors2_pathmaker.shift_reload", AC2_LANG[A2LANG]["ac2_tool_pm_shiftreload"])
 	
 	-- Tool Descriptions
 	language.Add("tool.actors2_pathmaker.name", AC2_LANG[A2LANG]["ac2_tool_category"])
@@ -63,8 +78,16 @@ if ( CLIENT ) then
 	language.Add("tool.actors2_pathmaker.0", AC2_LANG[A2LANG]["ac2_tool_pm_info"])
 
 	-- Custom Lang Strings
-	language.Add("ac2_notify_removed_pathptn", "["..AC2_LANG[A2LANG]["ac2_tool_category"].."] "..AC2_LANG[A2LANG]["ac2_tool_pm_remove_pathpnt"])
+	language.Add("ac2_notify_removed_pathptn", AC2_LANG[A2LANG]["ac2_tool_pm_remove_pathpnt"])
+	language.Add("ac2_notify_sel_nopath", AC2_LANG[A2LANG]["ac2_tool_pm_sel_nopatht"])
 
+end
+
+-- ## ----------------------------------- Actors2 ---------------------------------- ## --
+	-- Deploy
+-- ## ------------------------------------------------------------------------------ ## --
+function TOOL:Deploy()
+	
 end
 
 -- ## ----------------------------------- Actors2 ---------------------------------- ## --
@@ -82,6 +105,7 @@ function TOOL:LeftClick( trace )
 	local PathPoint = CreatePathPoint( ply, trace.HitPos )
 
 	BuildActorTable(ply, pathpnt)
+	PrintTable(Actors2TBL)
 
 	return true
 end
@@ -90,8 +114,8 @@ end
 	-- Path Point Remover
 -- ## ------------------------------------------------------------------------------ ## --
 function TOOL:RightClick( trace )
-	if not trace.HitPos then return false end
-	if trace.Entity:IsPlayer() then return false end
+	--if not trace.HitPos then return false end
+	--if trace.Entity:IsPlayer() then return false end
 	if CLIENT then return true end
 
 	local ply = self:GetOwner()
@@ -106,11 +130,37 @@ function TOOL:RightClick( trace )
 end
 
 function TOOL:Reload( trace )
+	if CLIENT then return true end
+	local ply = self:GetOwner()
 
+	-- Path Selector
+	if ( ply:KeyDown( IN_USE ) or ply:KeyDown( IN_SPEED ) ) then
+		if next(Actors2TBL) != nil then
+			local AC2 = CheckForPlayer( ply )
+			if #Actors2TBL[AC2[1]][AC2[2]].PathPoints <= 1 then
+				SendNotifyClient( ply, "#ac2_notify_sel_nopath", 1, "buttons/button16.wav" )
+			else
+				-- Select new path
+			end
+		end
+	else
+		-- Add new Path
+		if next(Actors2TBL) != nil then
+			local AC2T = CheckForPlayer( ply )
+			if Actors2TBL[AC2T[1]][AC2T[2]].PathPoints[PathSelector+1] == nil then
+				PathSelector = PathSelector + 1
+				Actors2TBL[AC2T[1]][AC2T[2]].PathPoints[PathSelector] = {}
+				RunConsoleCommand( "actors2_pathmaker_ac2_pathselector", PathSelector)
+				SendNotifyClient( ply, "Added New Path", 3, "buttons/button17.wav" )
+			end
+		end
+	end
+
+	return false
 end
 
 function TOOL:Think()
-
+	PathSelector = GetConVar("actors2_pathmaker_ac2_pathselector"):GetInt()
 end
 
 -- ## ----------------------------------- Actors2 ---------------------------------- ## --
@@ -120,7 +170,7 @@ local function IsEmptyTable( t )
 	return next( t ) == nil
 end
 
-local function CheckForPlayer( ply )
+function CheckForPlayer( ply )
 	local rtn = {}
 	if not IsEmptyTable(Actors2TBL) then
 		for k,v in pairs ( Actors2TBL ) do
@@ -139,7 +189,10 @@ local function PopulateActorTable( ply )
 	{
 		[ply:SteamID()] =
 		{
-			PathPoints = {}
+			PathPoints = 
+			{
+				[PathSelector] = {}
+			}
 		}
 	}
 	table.insert(Actors2TBL, TempTable)
@@ -148,7 +201,7 @@ end
 local function GetPathPointsTBL( ply )
 	local TempTBL = CheckForPlayer( ply )
 	if TempTBL then
-		local TempPathTBL = Actors2TBL[TempTBL[1]][TempTBL[2]].PathPoints
+		local TempPathTBL = Actors2TBL[TempTBL[1]][TempTBL[2]].PathPoints[PathSelector]
 		return TempPathTBL
 	end
 end
@@ -156,6 +209,7 @@ end
 local function SendNewPathPointTable( ply, t )
 	net.Start( "DrawPathPointLine" )
 		net.WriteTable( t )
+		net.WriteDouble( PathSelector)
 	net.Send( ply )
 end
 
@@ -175,10 +229,11 @@ local function RemoveFromPathPointsTable( ply )
 	end
 end
 
-local function SendNotifyClient( ply, msg )
+function SendNotifyClient( ply, msg, type, snd )
 	net.Start( "NotifyPathPointRMV" )
-		net.WriteEntity( ply )
 		net.WriteString( msg )
+		net.WriteDouble( type)
+		net.WriteString( snd )
 	net.Send( ply )
 end
 
@@ -201,7 +256,7 @@ function RemovePathPoint( ply )
 		local LastEnt = ents.GetByIndex( PathTBL[#PathTBL] )
 		LastEnt:Remove()
 		RemoveFromPathPointsTable( ply )
-		SendNotifyClient( ply, "#ac2_notify_removed_pathptn" )
+		SendNotifyClient( ply, "#ac2_notify_removed_pathptn", 2, "buttons/button15.wav" )
 	end
 end
 
@@ -213,21 +268,22 @@ function RemoveAimedPathPoint( ply, ent )
 				table.remove(PathTBL, k)
 				ent:Remove()
 				SendNewPathPointTable( ply, PathTBL )
-				SendNotifyClient( ply, "#ac2_notify_removed_pathptn" )
+				SendNotifyClient( ply, "#ac2_notify_removed_pathptn", 2, "buttons/button15.wav" )
 			end
 		end
 	end
 end
 
 if CLIENT then
-	local function NotifyHint( ply, msg )
-		notification.AddLegacy( msg, NOTIFY_UNDO, 2 )
-		surface.PlaySound( "buttons/button15.wav" )
+	local function NotifyHint( msg, type, snd )
+		notification.AddLegacy( msg, type, 2 )
+		surface.PlaySound( snd )
 	end
 	net.Receive( "NotifyPathPointRMV", function()
-		local ply = net.ReadEntity()
 		local msg = net.ReadString()
-		NotifyHint( ply, msg )
+		local type = net.ReadDouble()
+		local snd = net.ReadString()
+		NotifyHint( msg, type, snd )
 	end )
 end
 
