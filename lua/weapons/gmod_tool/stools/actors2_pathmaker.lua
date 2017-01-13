@@ -18,6 +18,10 @@ TOOL.ClientConVar =
 {
 	-- Selection
 	[ "ac2_pathselector" ] = 1,
+
+	-- Spawn/Remove Actors2
+	[ "ac2_spawn" ]	= "52",
+	[ "ac2_despawn" ]	= "51",
 }
 
 -- ## ----------------------------------- Actors2 ---------------------------------- ## --
@@ -106,7 +110,11 @@ function TOOL:Deploy()
 	end
 end
 
+-- ## ----------------------------------- Actors2 ---------------------------------- ## --
+	-- Holster
+-- ## ------------------------------------------------------------------------------ ## --
 function TOOL:Holster()
+	-- Cancels rotation
 	self:ClearObjects()
 end
 
@@ -124,6 +132,18 @@ function TOOL:LeftClick( trace )
 	local numobj = self:NumObjects()
 	degrees = 0
 
+	-- Receive Vars to insert on the actor Point
+	local SpawnKey = self:GetClientNumber( "ac2_spawn" )
+	local DeSpawnKey = self:GetClientNumber( "ac2_despawn" )
+
+	-- Builds a table to add in the Path
+	local ActorSettings =
+	{
+		SKey = SpawnKey,
+		DSKey = DeSpawnKey,
+	}
+
+	-- Rotate if 'E' or 'SHIFT' is pressed
 	if ply:KeyDown( IN_USE ) or ply:KeyDown( IN_SPEED ) then
 		if trace.HitWorld then return false end
 		if trace.Entity:GetClass() == "ac2_pathpoint" then
@@ -132,10 +152,12 @@ function TOOL:LeftClick( trace )
 			if numobj == 0 then
 				if CLIENT then return true end
 				SendNotifyClient( ply, "#tool.actors2_pathmaker.1", 0, "buttons/button17.wav", 4 )
+
 				local Phys = trace.Entity:GetPhysicsObjectNum( trace.PhysicsBone )
 				if IsValid( Phys ) then
 					Phys:EnableMotion( false )
 				end
+
 				self:SetObject( 1, trace.Entity, trace.HitPos, Phys, trace.PhysicsBone, trace.HitNormal )
 				self:SetStage( 1 )
 			else
@@ -143,13 +165,21 @@ function TOOL:LeftClick( trace )
 			end
 
 		end
+	-- If Pressed shift to snap angles, still finishes the rotation
 	elseif self:NumObjects() > 0 and IsValid( self:GetEnt(1) ) then
 		self:ClearObjects()
+
+	-- Creates the Path Points and Tables Here
 	else
 		if trace.Entity:GetClass() == "ac2_pathpoint" then return false end
+
 		local PathPoint = CreatePathPoint( ply, trace.HitPos )
 		BuildActorTable( ply, pathpnt )
 		PathSelector = GetConVar( "actors2_pathmaker_ac2_pathselector" ):GetInt()
+
+		-- Adds the Table to all Path Points (in case the actor point is removed)
+		pathpnt.ActorSettings = ActorSettings
+		CheckActorSpawn( ply )
 	end
 
 	return true
@@ -159,30 +189,38 @@ end
 	-- Path Point Remover
 -- ## ------------------------------------------------------------------------------ ## --
 function TOOL:RightClick( trace )
-	--if not trace.HitPos then return false end
-	--if trace.Entity:IsPlayer() then return false end
 	if CLIENT then return true end
 	local ply = self:GetOwner()
 
 	if trace.Entity:GetClass() == "ac2_pathpoint" then
 		RemoveAimedPathPoint( ply, trace.Entity)
+		CheckActorSpawn( ply )
 	else
 		RemovePathPoint( ply )
+		CheckActorSpawn( ply )
 	end
 
 	-- Automatic selector when a path is completely removed
 	local AC2TP = CheckForPlayer( ply )
 	if PathSelector > 1 and next(Actors2TBL[AC2TP[1]][AC2TP[2]].PathPoints[PathCount]) == nil then
+		-- Theres no more entities in the table, remove it
 		table.remove( Actors2TBL[AC2TP[1]][AC2TP[2]].PathPoints, PathCount )
+
+		-- Updates the Count
 		PathSelector = PathSelector - 1
 		RunConsoleCommand( "actors2_pathmaker_ac2_pathselector", PathSelector)
 		PathCount = PathSelector
+
+		-- Send the changes
 		SendNewPathPointTable( ply )
 	end
 	
 	return false
 end
 
+-- ## ----------------------------------- Actors2 ---------------------------------- ## --
+	-- Creates a new Path or Select one if avaliable
+-- ## ------------------------------------------------------------------------------ ## --
 function TOOL:Reload( trace )
 	if CLIENT then return true end
 	local ply = self:GetOwner()
@@ -218,6 +256,10 @@ function TOOL:Reload( trace )
 	return false
 end
 
+-- ## ----------------------------------- Actors2 ---------------------------------- ## --
+	-- Think
+	-- 1. Runs every tick
+-- ## ------------------------------------------------------------------------------ ## --
 function TOOL:Think()
 	-- Rotate the Selected Path Point
 	if self:NumObjects() > 0 then
@@ -236,6 +278,9 @@ function TOOL:Think()
 		end
 	end
 
+	-- Solves a bug when the players get out of the map
+	-- and the path points loses their color but this
+	-- is called every tick, needs optimization ASAP!!
 	if SERVER then
 		if self:GetOwner():IsInWorld() and next(Actors2TBL) then
 			SendNewPathPointTable( self:GetOwner() )
@@ -243,7 +288,9 @@ function TOOL:Think()
 	end
 end
 
--- Custom Tool Screen Interface
+-- ## ----------------------------------- Actors2 ---------------------------------- ## --
+	-- Custom Tool Interface (Screen)
+-- ## ------------------------------------------------------------------------------ ## --
 function TOOL:DrawToolScreen( width, height )
 	surface.SetDrawColor( Color( 30, 30, 30 ) )
 	surface.DrawRect( 0, 0, width, height )
@@ -293,13 +340,12 @@ local function GetPathPointsTBL( ply )
 	end
 end
 
-function SendNewPathPointTable( ply )
+function GetActorPointsTBL( ply )
 	local TempTBL = CheckForPlayer( ply )
-
-	net.Start( "DrawPathPointLine" )
-		net.WriteTable( Actors2TBL[TempTBL[1]][TempTBL[2]].PathPoints )
-		net.WriteDouble( PathCount )
-	net.Send( ply )
+	if TempTBL then
+		local TempPathTBL = Actors2TBL[TempTBL[1]][TempTBL[2]].PathPoints
+		return TempPathTBL
+	end
 end
 
 local function PopulatePathPointsTable( ply, ent )
@@ -318,6 +364,17 @@ local function RemoveFromPathPointsTable( ply )
 	end
 end
 
+-- ## ----------------------------------- Actors2 ---------------------------------- ## --
+	-- Network Functions
+-- ## ------------------------------------------------------------------------------ ## --
+function SendNewPathPointTable( ply )
+	local TempTBL = CheckForPlayer( ply )
+	net.Start( "DrawPathPointLine" )
+		net.WriteTable( Actors2TBL[TempTBL[1]][TempTBL[2]].PathPoints )
+		net.WriteDouble( PathCount )
+	net.Send( ply )
+end
+
 function SendNotifyClient( ply, msg, type, snd, dur )
 	net.Start( "NotifyPathPointRMV" )
 		net.WriteString( msg )
@@ -329,7 +386,6 @@ end
 
 -- ## ----------------------------------- Actors2 ---------------------------------- ## --
 	-- TOOL Click Functions
-	-- 1. Order Matters!
 -- ## ------------------------------------------------------------------------------ ## --
 function BuildActorTable( ply, ent )
 	if IsEmptyTable(Actors2TBL) then
@@ -364,6 +420,9 @@ function RemoveAimedPathPoint( ply, ent )
 	end
 end
 
+-- ## ----------------------------------- Actors2 ---------------------------------- ## --
+	-- Client Functions
+-- ## ------------------------------------------------------------------------------ ## --
 if CLIENT then
 	local function NotifyHint( msg, type, snd, dur )
 		notification.AddLegacy( msg, type, dur )
@@ -382,7 +441,11 @@ if CLIENT then
 	end
 end
 
+-- ## ----------------------------------- Actors2 ---------------------------------- ## --
+	-- Server Functions
+-- ## ------------------------------------------------------------------------------ ## --
 if SERVER then
+	util.AddNetworkString( "SendActorPoints" )
 	util.AddNetworkString( "DrawPathPointLine" )
 	util.AddNetworkString( "NotifyPathPointRMV" )
 
@@ -394,4 +457,59 @@ if SERVER then
 		pathpnt:SetPos( pos )
 		pathpnt:Spawn()
 	end
+
+	function CheckActorSpawn( ply )
+		local PathPTBL = GetActorPointsTBL( ply )
+		local PathP = PathPTBL[PathCount]
+		
+		if #PathP >= 1 and IsValid( ents.GetByIndex( PathP[1] ) ) then
+			if IsValid( npz ) then
+				print("Actor Removed")
+				npz:Remove()
+			end
+			CreateActorSpawn( ply, ents.GetByIndex(PathP[1]):GetPos(), ents.GetByIndex(PathP[1]):GetTable().ActorSettings )
+		end
+	end
+
+	function CreateActorSpawn( ply, pos, t )
+		print("Actor Created")
+		npz = ents.Create( "ac2_actor_generic" )
+		if not IsValid( npz ) then return end
+
+		npz:SetPos( pos )
+		local npzAcSpawn = numpad.OnDown(ply, t.SKey, "ActorSpawn", npz, pos, 0)
+		local npzAcDeSpawn = numpad.OnDown(ply, t.DSKey, "ActorDeSpawn", npz)
+	end
+
+	function SpawnActor(ply, ent, pos, delay)
+		print("spawn called")
+		if(IsValid(ent)) then
+			local posz = string.Explode(" ", tostring(pos))
+			delay = delay or 0
+			timer.Simple( delay, function()
+				ent:SetPos(Vector( posz[1], posz[2], posz[3] ) )
+				ent:Spawn()
+				ent:Activate()
+			end)
+		end
+	end
+
+	function DeSpawnActor(ply, ent)
+		print("despawn called")
+		--[[if(IsValid(ent)) then
+			ent:Remove()
+		end]]--
+	end
+
+	numpad.Register("ActorSpawn", SpawnActor)
+	numpad.Register("ActorDeSpawn", DeSpawnActor)
+end
+
+-- ## ----------------------------------- Actors2 ---------------------------------- ## --
+	-- TOOL CPanel
+-- ## ------------------------------------------------------------------------------ ## --
+function TOOL.BuildCPanel( CPanel )
+	CPanel:AddControl( "Header", { Text = "#tool.actors2_pathmaker.name", Description = "#tool.actors2_pathmaker.desc" } )
+	CPanel:AddControl( "Numpad", { Label = "Spawn Actor", Command = "actors2_pathmaker_ac2_spawn" } )
+	CPanel:AddControl( "Numpad", { Label = "Remove Actor", Command = "actors2_pathmaker_ac2_despawn" } )
 end
