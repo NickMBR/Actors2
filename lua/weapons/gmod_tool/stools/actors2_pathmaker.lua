@@ -234,6 +234,7 @@ function TOOL:Reload( trace )
 			else
 				if PathCount > 1 then PathCount = PathCount - 1 else PathCount = PathSelector end
 				SendNewPathPointTable( ply )
+				CheckActorSpawn( ply )
 			end
 		end
 	else
@@ -459,30 +460,39 @@ if SERVER then
 	end
 
 	function CheckActorSpawn( ply )
+		print("Checking Actor...")
 		local PathPTBL = GetActorPointsTBL( ply )
-		local PathP = PathPTBL[PathCount]
-		
-		if #PathP >= 1 and IsValid( ents.GetByIndex( PathP[1] ) ) then
-			if IsValid( npz ) then
-				print("Actor Removed")
-				npz:Remove()
+		local PathP = {}
+		local NpzName = ""
+
+		if next(PathPTBL) then
+			PathP = PathPTBL[PathCount]
+			if PathP[1] then NpzName = "ac2_"..PathP[1] end
+
+			if #PathP >= 1 and IsValid( ents.GetByIndex( PathP[1] ) ) then
+				if IsValid( npz ) and npz:GetName() == NpzName then
+					print("Actor Removed")
+					npz:Remove()
+					CreateActorSpawn( ply, ents.GetByIndex(PathP[1]):GetPos(), ents.GetByIndex(PathP[1]):GetTable().ActorSettings, PathP[1] )
+				else
+					CreateActorSpawn( ply, ents.GetByIndex(PathP[1]):GetPos(), ents.GetByIndex(PathP[1]):GetTable().ActorSettings, PathP[1] )
+				end
 			end
-			CreateActorSpawn( ply, ents.GetByIndex(PathP[1]):GetPos(), ents.GetByIndex(PathP[1]):GetTable().ActorSettings )
 		end
 	end
 
-	function CreateActorSpawn( ply, pos, t )
+	function CreateActorSpawn( ply, pos, t, id )
 		print("Actor Created")
 		npz = ents.Create( "ac2_actor_generic" )
 		if not IsValid( npz ) then return end
 
+		npz:SetName( "ac2_"..id )
 		npz:SetPos( pos )
 		local npzAcSpawn = numpad.OnDown(ply, t.SKey, "ActorSpawn", npz, pos, 0)
 		local npzAcDeSpawn = numpad.OnDown(ply, t.DSKey, "ActorDeSpawn", npz)
 	end
 
 	function SpawnActor(ply, ent, pos, delay)
-		print("spawn called")
 		if(IsValid(ent)) then
 			local posz = string.Explode(" ", tostring(pos))
 			delay = delay or 0
