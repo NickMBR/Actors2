@@ -67,6 +67,22 @@ if CLIENT then
 	end )
 end
 
+function ENT:FaceLastPathPoint()
+	-- Needs to Network!
+	if SERVER then
+		if #PathPointLinesTBL[PathPointsSelector] >= 2 then
+			for i = 2, #PathPointLinesTBL[PathPointsSelector] do
+				local ENT1 = ents.GetByIndex( PathPointLinesTBL[PathPointsSelector][i] )
+				local ENT2 = ents.GetByIndex( PathPointLinesTBL[PathPointsSelector][i+1] )
+
+				if IsValid( ENT1 ) and IsValid( ENT2 ) then
+					ENT1:PointAtEntity( ENT2 )
+				end
+			end
+		end
+	end
+end
+
 function ENT:Draw()
 	local ply = LocalPlayer()
 	local wep = ply:GetActiveWeapon()
@@ -91,5 +107,5 @@ function ENT:Draw()
 end
 
 function ENT:Think()
-	
+	--self:FaceLastPathPoint()
 end
