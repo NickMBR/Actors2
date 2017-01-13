@@ -27,6 +27,7 @@ AC2_LANG = {
 		-- Notifications
 		["ac2_tool_pm_sel_nopatht"]			= "There's no Paths to Select",
 		["ac2_tool_pm_sel_newpath"]			= "New Path was Added",
+		["ac2_tool_pm_sel_newnopath"]		= "Active Path has no points, can't create new Path",
 		["ac2_tool_pm_no_navmesh"]			= "This map doesn't have a Nav Mesh, Actors2 will not work correctly",
 	},
 	["pt-BR"] = {
@@ -53,6 +54,7 @@ AC2_LANG = {
 		-- Notificações
 		["ac2_tool_pm_sel_nopatht"]			= "Não há Trajetos para Selecionar",
 		["ac2_tool_pm_sel_newpath"]			= "Novo Trajeto foi Adicionado",
+		["ac2_tool_pm_sel_newnopath"]		= "O Trajeto atual não tem pontos, impossível criar novo Trajeto",
 		["ac2_tool_pm_no_navmesh"]			= "Esse mapa não possui um Nav Mesh, Atores2 não funcionará corretamente",
 	}
 }

@@ -20,7 +20,7 @@ function ENT:Initialize()
 		
 		self:SetMaterial("models/debug/debugwhite")
 		self:SetRenderMode( RENDERMODE_TRANSALPHA )
-		self:SetColor( Color( 30, 60, 210, 255 ) )
+		--self:SetColor( Color( 30, 60, 210, 255 ) )
 		self:DrawShadow( false )
 	end
 end
@@ -28,8 +28,7 @@ end
 -- Allows only the Actors2 properties to be shown
 function ENT:CanProperty( ply, property )
 	if property == "ac2_p_editactor" and self:GetColor().r == 225 and self:GetColor().g == 150 then return true
-	elseif property == "ac2_p_actionpoint" and self:GetColor().r == 30 and self:GetColor().g == 60 then return true
-	elseif property == "ac2_p_editactionpoint" and self:GetColor().r == 225 and self:GetColor().g == 54 then return true
+	elseif property == "ac2_p_editpathpoint" and self:GetColor().r == 30 and self:GetColor().g == 30 then return true
 	else return false end
 	return false
 end
@@ -52,7 +51,8 @@ function ChangePathColors()
 				if ke == 1 then 
 					ents.GetByIndex(va):SetColor( Color( 225, 150, 55, 255 ) )
 				else
-					ents.GetByIndex(va):SetColor( Color( 30, 60, 210, 255 ) )
+					--ents.GetByIndex(va):SetColor( Color( 30, 60, 210, 255 ) )
+					ents.GetByIndex(va):SetColor( Color( 30, 30, 30, 255 ) )
 				end
 			end
 		end
@@ -91,5 +91,5 @@ function ENT:Draw()
 end
 
 function ENT:Think()
-
+	
 end

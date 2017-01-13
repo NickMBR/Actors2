@@ -83,13 +83,14 @@ if ( CLIENT ) then
 	-- Stage 1 of the tool, used when rotating
 	language.Add("tool.actors2_pathmaker.left_1", AC2_LANG[A2LANG]["ac2_tool_pm_leftclick1"])
 	language.Add("tool.actors2_pathmaker.shift_left_1", AC2_LANG[A2LANG]["ac2_tool_pm_shiftleft1"])
-	language.Add("tool.actors2_pathmaker.info_1", AC2_LANG[A2LANG]["ac2_tool_pm_rotation"])
+	language.Add("tool.actors2_pathmaker.1", AC2_LANG[A2LANG]["ac2_tool_pm_rotation"])
 
 	-- Cache strings for serverside usage
 	language.Add("ac2_notify_removed_pathptn", AC2_LANG[A2LANG]["ac2_tool_pm_remove_pathpnt"])
 	language.Add("ac2_notify_sel_nopath", AC2_LANG[A2LANG]["ac2_tool_pm_sel_nopatht"])
 	language.Add("ac2_notify_sel_newpath", AC2_LANG[A2LANG]["ac2_tool_pm_sel_newpath"])
 	language.Add("ac2_notify_no_navmesh", AC2_LANG[A2LANG]["ac2_tool_pm_no_navmesh"])
+	language.Add("ac2_notify_sel_nonewpath", AC2_LANG[A2LANG]["ac2_tool_pm_sel_newnopath"])
 
 end
 
@@ -108,11 +109,6 @@ end
 function TOOL:Holster()
 	self:ClearObjects()
 end
-
--- ## ----------------------------------- Actors2 ---------------------------------- ## --
-	-- Rotation Functions
-	-- 1. From Precision Tool by: Wrex, Hunted, [XNG] Sheders
--- ## ------------------------------------------------------------------------------ ## --
 
 -- ## ----------------------------------- Actors2 ---------------------------------- ## --
 	-- Path Point Creator
@@ -206,13 +202,15 @@ function TOOL:Reload( trace )
 		-- Add new Path
 		if next(Actors2TBL) != nil then
 			local AC2T = CheckForPlayer( ply )
-			if Actors2TBL[AC2T[1]][AC2T[2]].PathPoints[PathSelector+1] == nil then
+			if next(Actors2TBL[AC2T[1]][AC2T[2]].PathPoints[PathSelector]) and Actors2TBL[AC2T[1]][AC2T[2]].PathPoints[PathSelector+1] == nil then
 				PathSelector = PathSelector + 1
 				Actors2TBL[AC2T[1]][AC2T[2]].PathPoints[PathSelector] = {}
 				RunConsoleCommand( "actors2_pathmaker_ac2_pathselector", PathSelector)
 				SendNotifyClient( ply, "#ac2_notify_sel_newpath", 0, "buttons/button17.wav", 2 )
 				PathCount = PathSelector
 				SendNewPathPointTable( ply )
+			else
+				SendNotifyClient( ply, "#ac2_notify_sel_nonewpath", 1, "buttons/button16.wav", 4 )
 			end
 		end
 	end
@@ -237,6 +235,19 @@ function TOOL:Think()
 			Phys2:Wake()
 		end
 	end
+
+	if SERVER then
+		if self:GetOwner():IsInWorld() and next(Actors2TBL) then
+			SendNewPathPointTable( self:GetOwner() )
+		end
+	end
+end
+
+-- Custom Tool Screen Interface
+function TOOL:DrawToolScreen( width, height )
+	surface.SetDrawColor( Color( 30, 30, 30 ) )
+	surface.DrawRect( 0, 0, width, height )
+	draw.SimpleText( "Actors2", "DermaLarge", width / 2, (height / 2)-30, Color( 200, 200, 200 ), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
 end
 
 -- ## ----------------------------------- Actors2 ---------------------------------- ## --
