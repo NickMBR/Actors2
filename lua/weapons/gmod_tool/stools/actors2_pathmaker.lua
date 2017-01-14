@@ -36,6 +36,12 @@ local degrees = 0
 -- ## ----------------------------------- Actors2 ---------------------------------- ## --
 	-- Resources
 -- ## ------------------------------------------------------------------------------ ## --
+if CLIENT then
+	surface.CreateFont("Actors2F_50", {
+		font = "Trebuchet24",
+		size = 50,
+	})
+end
 
 -- ## ----------------------------------- Actors2 ---------------------------------- ## --
 	-- Hooks
@@ -295,7 +301,10 @@ end
 function TOOL:DrawToolScreen( width, height )
 	surface.SetDrawColor( Color( 30, 30, 30 ) )
 	surface.DrawRect( 0, 0, width, height )
-	draw.SimpleText( "Actors2", "DermaLarge", width / 2, (height / 2)-30, Color( 200, 200, 200 ), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
+
+	surface.SetDrawColor( Color( 200, 200, 200 ) )
+	surface.DrawRect( 0, 0, width, height/2-50 )
+	draw.SimpleText( "Actors2", "Actors2F_50", width / 2, height/2-90, Color( 30, 30, 30 ), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
 end
 
 -- ## ----------------------------------- Actors2 ---------------------------------- ## --
@@ -475,6 +484,19 @@ if SERVER then
 		pathpnt:Spawn()
 	end
 
+	-- Makes the actor face the next path point
+	-- Updates the angle when path is updated
+	function FaceLastPathPoint( t )
+		if t[2] then
+			local ENT1 = ents.GetByIndex( t[1] )
+			local ENT2 = ents.GetByIndex( t[2] )
+
+			if IsValid( ENT1 ) and IsValid( ENT2 ) then
+				ENT1:PointAtEntity( ENT2 )
+			end
+		end
+	end
+
 	-- Check The Path Points
 	-- Spawns an Actor always on the first point of the Path
 	-- If it exists, remove it and create again (despawn)
@@ -491,8 +513,10 @@ if SERVER then
 			if IsValid( ACEnt:GetTable().ActorSettings.ActorEnt ) and ACEnt:GetTable().ActorSettings.ActorEnt:GetName() == ACName then
 				ACEnt:GetTable().ActorSettings.ActorEnt:Remove()
 				CreateActorSpawn( ply, ACEnt:GetPos(), ACEnt:GetAngles(), ACEnt:GetTable().ActorSettings, PathP[1] )
+				FaceLastPathPoint( PathP )
 			else
 				CreateActorSpawn( ply, ACEnt:GetPos(), ACEnt:GetAngles(), ACEnt:GetTable().ActorSettings, PathP[1] )
+				FaceLastPathPoint( PathP )
 			end
 		end
 	end
@@ -523,9 +547,9 @@ if SERVER then
 
 	function DeSpawnActor(ply, ent)
 		print("despawn called")
-		--[[if(IsValid(ent)) then
+		if(IsValid(ent)) then
 			ent:Remove()
-		end]]--
+		end
 	end
 
 	numpad.Register("ActorSpawn", SpawnActor)
