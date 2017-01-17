@@ -1,0 +1,109 @@
+/* ==================================================
+   Default
+================================================== */
+* {
+	margin: 0;
+	padding: 0;
+}
+
+html {
+	height: 100%;
+}
+
+body {
+	height: 600px;
+    background: #303030;
+    font-family: sans-serif;
+}
+
+/* ==================================================
+   Containers
+================================================== */
+.container {
+    width: 100%;
+	height: 100%;
+}
+
+.content {
+    padding-top: 200px;
+    text-align: center;
+}
+
+/* ==================================================
+   Text
+================================================== */
+.welcome-text {
+    font-weight: 400;
+    color: rgb(210, 210, 210);
+}
+
+.welcome-text.big {
+    font-size: 3.5em;
+}
+
+.welcome-text.small{
+    font-size: 1.5em;
+}
+
+/* ==================================================
+   Buttons
+================================================== */
+.button {
+  	display: inline-block;
+  	padding: 13px 26px;
+  	color: #fff;
+  	text-align: center;
+  	text-transform: uppercase;
+  	font-weight:500;
+  	font-size: 16px;
+  	cursor: pointer;
+    text-decoration: none;
+  
+	-webkit-transition: all 0.1s linear;
+       -moz-transition: all 0.1s linear;
+         -o-transition: all 0.1s linear;
+            transition: all 0.1s linear;
+}
+
+.button.red {
+    background-color: rgb(200, 90, 75);
+}
+
+.button.green {
+    background-color: rgb(100, 200, 75);
+}
+
+/*--- Hover/Active/Focus State ---*/
+
+.button:hover,
+.button:active {
+	background-color: #fff;
+	color:#303030;
+}
+
+/* --- Button Sizes --- */
+
+.button.button-large {
+  	padding: 16px 30px;
+  	font-size: 18px;
+}
+
+.button.button-small {
+  	padding: 8px 18px;
+  	font-size: 14px;
+}
+
+.button.button-mini {
+  	padding: 4px 12px;
+  	font-size: 12px;
+}
+
+.button.button-block {
+	padding-right: 0;
+	padding-left: 0;
+	width: 100%;	
+}
+
+.button + .button {
+	margin-left: 10px;	
+}

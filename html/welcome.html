@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<head>
+    <meta charset="utf-8">
+    <link href="css/welcome.css" rel="stylesheet">
+    <script type="text/javascript" src="js/lua.js"></script>
+    <script type="text/javascript" src="js/language.js"></script>
+     <script type="text/javascript" src="js/welcome.js"></script>
+	<script type="text/javascript" src="js/thirdparty/jquery.js"></script>
+</head>
+<body onLoad="hideAllPages()">
+    <div class="container" change-pg="1">
+
+        <!-- English -->
+         <div class="content" do-translate="en">
+            <p class="welcome-text big">Welcome to Actors2!</p>
+            <p class="welcome-text small">It's the first time you open it, should we start the tutorial?</p>
+            <br /><br />
+            <a class="button button-large green" onclick="nextPage();">SURE THING</a> <a class="button button-large red" onclick="closePanel();">NOT NOW, THANKS</a>
+        </div>
+
+        <!-- Português -->
+         <div class="content" do-translate="ptbr">
+            <p class="welcome-text big">Bem Vindo ao Atores2!</p>
+            <p class="welcome-text small">É a primeira vez que você o abre, devemos começar o tutorial?</p>
+            <br /><br />
+            <a class="button button-large green" onclick="nextPage();">COM CERTEZA</a> <a class="button button-large red" onclick="closePanel();">AGORA NÃO, OBRIGADO</a>
+        </div>
+
+    </div>
+
+    <div class="container" change-pg="2">
+
+        <!-- English -->
+         <div class="content" do-translate="en">
+             <p class="welcome-text big">Alright!</p>
+             <p class="welcome-text small">Let me check some things first..</p>
+         </div>
+
+         <!-- Português -->
+         <div class="content" do-translate="ptbr">
+             <p class="welcome-text big">Beleza!</p>
+             <p class="welcome-text small">Deixe-me checar algumas coisas primeiro..</p>
+             <br /><br />
+
+             <p class="welcome-text small" prop="nav">NavMesh existe...</p>
+         </div>
+
+    </div>
+</body>
+</html>
