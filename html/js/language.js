@@ -10,5 +10,5 @@ function translateItem( ActorsLang ) {
 }
 
 function receiveLang( str ) {
-    translateItem( str )
+    translateItem( str );
 }

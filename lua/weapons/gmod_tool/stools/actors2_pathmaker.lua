@@ -16,10 +16,13 @@
 -- ## ------------------------------------------------------------------------------ ## --
 TOOL.ClientConVar =
 {
+	-- Actors2
+	[ "ac2_welcome" ] = 1,
+
 	-- Selection
 	[ "ac2_pathselector" ] = 1,
 
-	-- Spawn/Remove Actors2
+	-- Spawn/Remove Keys
 	[ "ac2_spawn" ]	= "52",
 	[ "ac2_despawn" ]	= "51",
 }
@@ -109,6 +112,11 @@ end
 -- ## ------------------------------------------------------------------------------ ## --
 function TOOL:Deploy()
 	local ply = self:GetOwner()
+
+	-- Open the Welcome Panel if it's the first timer
+	net.Start( "Ac2_OpenWelcomePanel" )
+		net.WriteBool( navmesh.IsLoaded() )
+	net.Send( ply )
 
 	-- If there's no nav mesh, notify the client
 	if not navmesh.IsLoaded() then
@@ -474,6 +482,8 @@ if SERVER then
 	util.AddNetworkString( "SendActorPoints" )
 	util.AddNetworkString( "DrawPathPointLine" )
 	util.AddNetworkString( "NotifyPathPointRMV" )
+	util.AddNetworkString( "Ac2_OpenWelcomePanel" )
+	util.AddNetworkString( "CheckNavMesh" )
 
 	function CreatePathPoint( ply, pos )
 		pathpnt = ents.Create( "ac2_pathpoint" )
