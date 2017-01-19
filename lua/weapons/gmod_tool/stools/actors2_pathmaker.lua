@@ -113,10 +113,12 @@ end
 function TOOL:Deploy()
 	local ply = self:GetOwner()
 
-	-- Open the Welcome Panel if it's the first timer
-	net.Start( "Ac2_OpenWelcomePanel" )
-		net.WriteBool( navmesh.IsLoaded() )
-	net.Send( ply )
+	-- Open the Welcome Panel if it's the first time
+	if ( self:GetClientNumber( "ac2_welcome" ) == 1 ) then
+		net.Start( "Ac2_OpenWelcomePanel" )
+			net.WriteBool( navmesh.IsLoaded() )
+		net.Send( ply )
+	end
 
 	-- If there's no nav mesh, notify the client
 	if not navmesh.IsLoaded() then

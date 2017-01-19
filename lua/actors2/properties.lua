@@ -21,6 +21,7 @@ properties.Add( "ac2_p_editactor", {
 		self:MsgStart()
 			net.WriteEntity( ent )
 		self:MsgEnd()
+		print("opened actor settings on Action")
 
 	end,
 	Receive = function( self, length, player )
@@ -31,7 +32,7 @@ properties.Add( "ac2_p_editactor", {
 
 -- ## ----------------------------------- Actors2 ---------------------------------- ## --
 	-- Action Point Property
-	-- 1. Only Appears on the Blue Path Points
+	-- 1. Only Appears on the Black Path Points
 	-- 2. Opens the panel to edit the point settings.
 	-- 3. Path Points make actors run custom functions such as shoot to a target.
 -- ## ------------------------------------------------------------------------------ ## --
@@ -53,6 +54,7 @@ properties.Add( "ac2_p_editpathpoint", {
 		self:MsgStart()
 			net.WriteEntity( ent )
 		self:MsgEnd()
+		print("opened path settings on Action")
 
 	end,
 	Receive = function( self, length, player )

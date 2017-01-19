@@ -39,8 +39,13 @@ body {
 .welc-checks {
 	position: absolute;
 	bottom: 0;
-	padding-bottom: 20px;
-	padding-left: 20px;
+	padding-bottom: 10px;
+	padding-left: 10px;
+}
+
+.welc-checks p img {
+	margin-right: 5px;
+	margin-bottom: -3px;
 }
 
 /* ==================================================
@@ -60,8 +65,8 @@ body {
 }
 
 .welcome-text.small{
-    font-size: 0.8em;
-	font-weight: 500;
+    font-size: 0.7em;
+	font-weight: 800;
     text-align: left;	
 }
 
