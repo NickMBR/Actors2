@@ -68,7 +68,7 @@ body {
     font-size: 1em;
 	font-weight: 800;
     text-align: left;
-	color: rgb(200, 160, 75);
+	color: rgb(200, 90, 75);
 }
 
 .welcome-text.small{
@@ -103,6 +103,10 @@ body {
 
 .button.green {
     background-color: rgb(100, 200, 75);
+}
+
+.button.blue {
+	background-color: rgb(75, 120, 200);
 }
 
 /*--- Hover/Active/Focus State ---*/

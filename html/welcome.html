@@ -13,15 +13,17 @@
         <!-- English -->
          <div class="content pad-200" do-translate="en">
             <p class="welcome-text big">Welcome to Actors2!</p>
-            <p class="welcome-text medium">It's the first time you open it, should we start the tutorial?</p>
+            <p class="welcome-text medium">There's a especially fast tutorial avaliable, should we start it?</p>
             <br /><br />
-            <a class="button button-large green" onclick="nextPage();">SURE THING</a> <a class="button button-large red" onclick="closePanel();">NOT NOW</a>
+            <a class="button button-large green" onclick="nextPage();">SURE THING</a>
+            <a class="button button-large red" onclick="closePanel();">NOT NOW</a>
+            <a id="stop_showing" class="button button-large blue" onclick="doNotShowAgain();">STOP SHOWING ME THIS</a>
         </div>
         <div class="welc-checks" do-translate="en">
-            <p class="welcome-text small" prop="check"> <img src="asset://garrysmod/materials/icon16/tick.png" /> Addon verification successful! </p>
+            <p class="welcome-text small" prop="check"> <img src="asset://garrysmod/materials/icon16/tick.png" /> Verification successful! </p>
             <p class="welcome-text small" prop="nocheck">
                 <img src="asset://garrysmod/materials/icon16/cross.png" />
-                An error ocurred! Possible Reason: 
+                Verification Failed!  
                 <span id="checkreason" class="welcome-text smallish"></span>
             </p>
         </div>
@@ -29,15 +31,17 @@
         <!-- Português -->
          <div class="content pad-200" do-translate="ptbr">
             <p class="welcome-text big">Bem Vindo ao Atores2!</p>
-            <p class="welcome-text medium">É a primeira vez que você o abre, devemos começar o tutorial?</p>
+            <p class="welcome-text medium">Um tutorial especialmente rápido está disponível, devemos começar-lo?</p>
             <br /><br />
-            <a class="button button-large green" onclick="nextPage();">COM CERTEZA</a> <a class="button button-large red" onclick="closePanel();">AGORA NÃO</a>
+            <a class="button button-large green" onclick="nextPage();">COM CERTEZA</a>
+            <a class="button button-large red" onclick="closePanel();">AGORA NÃO</a>
+            <a id="stop_showing" class="button button-large blue" onclick="doNotShowAgain();">PARE DE ME MOSTRAR ISSO</a>
         </div>
         <div class="welc-checks" do-translate="ptbr">
-            <p class="welcome-text small" prop="check"><img src="asset://garrysmod/materials/icon16/tick.png" /> Verificação do addon feita com sucesso!</p>
+            <p class="welcome-text small" prop="check"><img src="asset://garrysmod/materials/icon16/tick.png" /> Verificação feita com sucesso!</p>
             <p class="welcome-text small" prop="nocheck">
                 <img src="asset://garrysmod/materials/icon16/cross.png" />
-                Ocorreu um erro! Possivel Razão: 
+                Falha na Verificação! 
                 <span id="checkreason" class="welcome-text smallish"></span>
             </p>
         </div>

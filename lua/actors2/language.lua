@@ -32,8 +32,8 @@ AC2_LANG = {
 
 		-- Welcome Panel
 		["ac2_welc_check_nav"]				= "No Navigation Mesh found",
-		["ac2_welc_check_version"]			= "Addon Out-of-Date",
-		["ac2_welc_check_vers404"]			= "Version not compared, no internet connection?",
+		["ac2_welc_check_version"]			= "Addon is Out-of-Date",
+		["ac2_welc_check_vers404"]			= "Addon version could not be found",
 
 		-- Actor Settings Panel
 		["ac2_panelset_title"]				= "Actor Settings",
@@ -69,8 +69,8 @@ AC2_LANG = {
 
 		-- Painel de Boas Vindas
 		["ac2_welc_check_nav"]				= "Navigation Mesh não encontrado",
-		["ac2_welc_check_version"]			= "Addon Desatualizado",
-		["ac2_welc_check_vers404"]			= "Versão não foi comparada, sem conexão a internet?",
+		["ac2_welc_check_version"]			= "Addon está Desatualizado",
+		["ac2_welc_check_vers404"]			= "Versão do addon não pode ser encontrada",
 
 		-- Painel Configurações do Ator
 		["ac2_panelset_title"]				= "Configurações do Ator",

@@ -6,10 +6,12 @@
 		--	GitHub: https://github.com/NickMBR
 		--	Facebook: http://fb.com/NickMBR1
 		--	Youtube: http://youtube.com/NickMBR
-
-	--	Coffee Cups: 1
-	--	GM Crashes: 0
 -- ## ------------------------------------------------------------------------------ ## --
+
+TOOL.Category	= AC2_LANG[A2LANG]["ac2_tool_category"]
+TOOL.Name		= AC2_LANG[A2LANG]["ac2_tool_pathmaker"]
+TOOL.Command	= nil
+TOOL.ConfigName	= ""
 
 -- ## ----------------------------------- Actors2 ---------------------------------- ## --
 	-- Persisting Client Variables
@@ -35,8 +37,9 @@ local PathPointsTBL = {}
 local PathSelector = 1
 local PathCount = 1
 local degrees = 0
-local AC2_Version = "101"
+local AC2_Version = "104"
 local CheckActors2Addon = {}
+local WlcState = 0
 
 -- ## ----------------------------------- Actors2 ---------------------------------- ## --
 	-- Resources
@@ -66,11 +69,6 @@ end
 	-- Tool Keys, Language, Translation
 -- ## ------------------------------------------------------------------------------ ## --
 if ( CLIENT ) then
-	TOOL.Category	= AC2_LANG[A2LANG]["ac2_tool_category"]
-	TOOL.Name		= AC2_LANG[A2LANG]["ac2_tool_pathmaker"]
-	TOOL.Command	= nil
-	TOOL.ConfigName	= ""
-	
 	TOOL.Information = {
 		{ name = "left", stage = 0 },
 		{ name = "left_1", stage = 1 },
@@ -106,44 +104,39 @@ if ( CLIENT ) then
 	language.Add("ac2_notify_sel_newpath", AC2_LANG[A2LANG]["ac2_tool_pm_sel_newpath"])
 	language.Add("ac2_notify_no_navmesh", AC2_LANG[A2LANG]["ac2_tool_pm_no_navmesh"])
 	language.Add("ac2_notify_sel_nonewpath", AC2_LANG[A2LANG]["ac2_tool_pm_sel_newnopath"])
-
-	
-
 end
 
-if SERVER then
-	function CheckAddonTest()
-		if navmesh.IsLoaded() then
+function TOOL:CheckAddonTest()
+	local ply = self:GetOwner()
+
+	local function AC2GitCheck( contents, size )
+		if not navmesh.IsLoaded() then
 			CheckActors2Addon.AC2Nav = AC2_LANG[A2LANG]["ac2_welc_check_nav"]
 		end
 
-		function AC2GitCheck( contents, size )
-			local vrs = tonumber( contents, 10 )
-			if vrs then
-				if tonumber(AC2_Version, 10) < vrs then
-					CheckActors2Addon.AC2Version = AC2_LANG[A2LANG]["ac2_welc_check_version"]
-				end
-			elseif vrs == nil then
-				CheckActors2Addon.AC2Version = AC2_LANG[A2LANG]["ac2_welc_check_vers404"]
+		local vrs = tonumber( contents, 10 )
+		if vrs then
+			if tonumber(AC2_Version, 10) < vrs then
+				CheckActors2Addon.AC2Version = AC2_LANG[A2LANG]["ac2_welc_check_version"]
 			end
+		elseif vrs == nil then
+			CheckActors2Addon.AC2Version = AC2_LANG[A2LANG]["ac2_welc_check_vers404"]
 		end
-		http.Fetch("https://raw.githubusercontent.com/NickMBR/Actors2/master/version.txt", AC2GitCheck, function() end)
-	end
-end
 
--- ## ----------------------------------- Actors2 ---------------------------------- ## --
-	-- Deploy
--- ## ------------------------------------------------------------------------------ ## --
-function TOOL:Deploy()
-	local ply = self:GetOwner()
-
-	-- Open the Welcome Panel if it's the first time
-	if self:GetClientNumber( "ac2_welcome" ) == 1 then
-		CheckAddonTest()
-		net.Start( "Ac2_OpenWelcomePanel" )
+		net.Start( "Ac2_FetchVersion" )
 			net.WriteTable( CheckActors2Addon )
 		net.Send( ply )
+
+		RunConsoleCommand( "actors2_pathmaker_ac2_welcome", 2 )
 	end
+	http.Fetch("https://raw.githubusercontent.com/NickMBR/Actors2/master/version.txt", AC2GitCheck, function() end)
+
+	if WlcState < 2 then WlcState = WlcState + 1 else WlcState = 2 end
+
+	-- Open the Welcome Panel if it's the first time
+	net.Start( "Ac2_OpenWelcomePanel" )
+		net.WriteDouble( WlcState )
+	net.Send( ply )
 
 	-- If there's no nav mesh, notify the client
 	if not navmesh.IsLoaded() then
@@ -152,11 +145,21 @@ function TOOL:Deploy()
 end
 
 -- ## ----------------------------------- Actors2 ---------------------------------- ## --
+	-- Deploy
+-- ## ------------------------------------------------------------------------------ ## --
+function TOOL:Deploy()
+end
+
+-- ## ----------------------------------- Actors2 ---------------------------------- ## --
 	-- Holster
 -- ## ------------------------------------------------------------------------------ ## --
 function TOOL:Holster()
 	-- Cancels rotation
 	self:ClearObjects()
+
+	if self:GetClientNumber( "ac2_welcome" ) != 0 then
+		RunConsoleCommand( "actors2_pathmaker_ac2_welcome", 1 )
+	end
 end
 
 -- ## ----------------------------------- Actors2 ---------------------------------- ## --
@@ -168,62 +171,67 @@ function TOOL:LeftClick( trace )
 	if not trace.HitPos then return false end
 	if trace.Entity:IsPlayer() then return false end
 	if CLIENT then return true end
-	
-	local ply = self:GetOwner()
-	local numobj = self:NumObjects()
-	degrees = 0
 
-	-- Receive Vars to insert on the actor Point
-	local SpawnKey = self:GetClientNumber( "ac2_spawn" )
-	local DeSpawnKey = self:GetClientNumber( "ac2_despawn" )
+	-- Opens the Welcome Panel if it's the first time
+	if self:GetClientNumber( "ac2_welcome" ) != 0 then
+		self:CheckAddonTest()
+		return false
+	else
+		local ply = self:GetOwner()
+		local numobj = self:NumObjects()
+		degrees = 0
 
-	-- Builds a table to add in the Path
-	local ActorSettings =
-	{
-		SKey = SpawnKey,
-		DSKey = DeSpawnKey,
-	}
+		-- Receive Vars to insert on the actor Point
+		local SpawnKey = self:GetClientNumber( "ac2_spawn" )
+		local DeSpawnKey = self:GetClientNumber( "ac2_despawn" )
 
-	-- Rotate if 'E' or 'SHIFT' is pressed
-	if ply:KeyDown( IN_USE ) or ply:KeyDown( IN_SPEED ) then
-		if trace.HitWorld then return false end
-		if trace.Entity:GetClass() == "ac2_pathpoint" then
-			if SERVER and not util.IsValidPhysicsObject( trace.Entity, trace.PhysicsBone ) then return false end
+		-- Builds a table to add in the Path
+		local ActorSettings =
+		{
+			SKey = SpawnKey,
+			DSKey = DeSpawnKey,
+		}
 
-			if numobj == 0 then
-				if CLIENT then return true end
-				SendNotifyClient( ply, "#tool.actors2_pathmaker.1", 0, "buttons/button17.wav", 4 )
+		-- Rotate if 'E' or 'SHIFT' is pressed
+		if ply:KeyDown( IN_USE ) or ply:KeyDown( IN_SPEED ) then
+			if trace.HitWorld then return false end
+			if trace.Entity:GetClass() == "ac2_pathpoint" then
+				if SERVER and not util.IsValidPhysicsObject( trace.Entity, trace.PhysicsBone ) then return false end
 
-				local Phys = trace.Entity:GetPhysicsObjectNum( trace.PhysicsBone )
-				if IsValid( Phys ) then
-					Phys:EnableMotion( false )
+				if numobj == 0 then
+					if CLIENT then return true end
+					SendNotifyClient( ply, "#tool.actors2_pathmaker.1", 0, "buttons/button17.wav", 4 )
+
+					local Phys = trace.Entity:GetPhysicsObjectNum( trace.PhysicsBone )
+					if IsValid( Phys ) then
+						Phys:EnableMotion( false )
+					end
+
+					self:SetObject( 1, trace.Entity, trace.HitPos, Phys, trace.PhysicsBone, trace.HitNormal )
+					self:SetStage( 1 )
+				else
+					self:ClearObjects()
 				end
 
-				self:SetObject( 1, trace.Entity, trace.HitPos, Phys, trace.PhysicsBone, trace.HitNormal )
-				self:SetStage( 1 )
-			else
-				self:ClearObjects()
 			end
+		-- If Pressed shift to snap angles, still finishes the rotation
+		elseif self:NumObjects() > 0 and IsValid( self:GetEnt(1) ) then
+			self:ClearObjects()
 
+		-- Creates the Path Points and Tables Here
+		else
+			if trace.Entity:GetClass() == "ac2_pathpoint" then return false end
+
+			local PathPoint = CreatePathPoint( ply, trace.HitPos )
+			BuildActorTable( ply, pathpnt )
+			PathSelector = GetConVar( "actors2_pathmaker_ac2_pathselector" ):GetInt()
+
+			-- Adds the Table to all Path Points (in case the actor point is removed)
+			pathpnt.ActorSettings = ActorSettings
+			CheckActorSpawn( ply )
 		end
-	-- If Pressed shift to snap angles, still finishes the rotation
-	elseif self:NumObjects() > 0 and IsValid( self:GetEnt(1) ) then
-		self:ClearObjects()
-
-	-- Creates the Path Points and Tables Here
-	else
-		if trace.Entity:GetClass() == "ac2_pathpoint" then return false end
-
-		local PathPoint = CreatePathPoint( ply, trace.HitPos )
-		BuildActorTable( ply, pathpnt )
-		PathSelector = GetConVar( "actors2_pathmaker_ac2_pathselector" ):GetInt()
-
-		-- Adds the Table to all Path Points (in case the actor point is removed)
-		pathpnt.ActorSettings = ActorSettings
-		CheckActorSpawn( ply )
+		return true
 	end
-
-	return true
 end
 
 -- ## ----------------------------------- Actors2 ---------------------------------- ## --
@@ -509,8 +517,9 @@ if SERVER then
 	util.AddNetworkString( "SendActorPoints" )
 	util.AddNetworkString( "DrawPathPointLine" )
 	util.AddNetworkString( "NotifyPathPointRMV" )
-	util.AddNetworkString( "Ac2_OpenWelcomePanel" )
 	util.AddNetworkString( "CheckNavMesh" )
+	util.AddNetworkString( "Ac2_OpenWelcomePanel" )
+	util.AddNetworkString( "Ac2_FetchVersion" )
 	util.AddNetworkString( "Ac2_OpenActorPanel" )
 
 	function CreatePathPoint( ply, pos )
@@ -543,7 +552,7 @@ if SERVER then
 	function CheckActorSpawn( ply )
 		local PathPTBL = GetActorPointsTBL( ply )
 
-		if next(PathPTBL) and #PathPTBL[PathCount] >= 1 then
+		if PathPTBL and #PathPTBL[PathCount] >= 1 then
 			local PathP = PathPTBL[PathCount]
 			local ACEnt = ents.GetByIndex(PathP[1])
 			local ACName = string.format("%s%s", "ac2_", tostring(PathP[1]))
