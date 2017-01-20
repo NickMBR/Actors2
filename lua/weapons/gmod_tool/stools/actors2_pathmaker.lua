@@ -35,6 +35,8 @@ local PathPointsTBL = {}
 local PathSelector = 1
 local PathCount = 1
 local degrees = 0
+local AC2_Version = "101"
+local CheckActors2Addon = {}
 
 -- ## ----------------------------------- Actors2 ---------------------------------- ## --
 	-- Resources
@@ -105,6 +107,28 @@ if ( CLIENT ) then
 	language.Add("ac2_notify_no_navmesh", AC2_LANG[A2LANG]["ac2_tool_pm_no_navmesh"])
 	language.Add("ac2_notify_sel_nonewpath", AC2_LANG[A2LANG]["ac2_tool_pm_sel_newnopath"])
 
+	
+
+end
+
+if SERVER then
+	function CheckAddonTest()
+		if navmesh.IsLoaded() then
+			CheckActors2Addon.AC2Nav = AC2_LANG[A2LANG]["ac2_welc_check_nav"]
+		end
+
+		function AC2GitCheck( contents, size )
+			local vrs = tonumber( contents, 10 )
+			if vrs then
+				if tonumber(AC2_Version, 10) < vrs then
+					CheckActors2Addon.AC2Version = AC2_LANG[A2LANG]["ac2_welc_check_version"]
+				end
+			elseif vrs == nil then
+				CheckActors2Addon.AC2Version = AC2_LANG[A2LANG]["ac2_welc_check_vers404"]
+			end
+		end
+		http.Fetch("https://raw.githubusercontent.com/NickMBR/Actors2/master/version.txt", AC2GitCheck, function() end)
+	end
 end
 
 -- ## ----------------------------------- Actors2 ---------------------------------- ## --
@@ -114,9 +138,10 @@ function TOOL:Deploy()
 	local ply = self:GetOwner()
 
 	-- Open the Welcome Panel if it's the first time
-	if ( self:GetClientNumber( "ac2_welcome" ) == 1 ) then
+	if self:GetClientNumber( "ac2_welcome" ) == 1 then
+		CheckAddonTest()
 		net.Start( "Ac2_OpenWelcomePanel" )
-			net.WriteBool( navmesh.IsLoaded() )
+			net.WriteTable( CheckActors2Addon )
 		net.Send( ply )
 	end
 
@@ -486,6 +511,7 @@ if SERVER then
 	util.AddNetworkString( "NotifyPathPointRMV" )
 	util.AddNetworkString( "Ac2_OpenWelcomePanel" )
 	util.AddNetworkString( "CheckNavMesh" )
+	util.AddNetworkString( "Ac2_OpenActorPanel" )
 
 	function CreatePathPoint( ply, pos )
 		pathpnt = ents.Create( "ac2_pathpoint" )
@@ -517,7 +543,7 @@ if SERVER then
 	function CheckActorSpawn( ply )
 		local PathPTBL = GetActorPointsTBL( ply )
 
-		if #PathPTBL[PathCount] >= 1 then
+		if next(PathPTBL) and #PathPTBL[PathCount] >= 1 then
 			local PathP = PathPTBL[PathCount]
 			local ACEnt = ents.GetByIndex(PathP[1])
 			local ACName = string.format("%s%s", "ac2_", tostring(PathP[1]))

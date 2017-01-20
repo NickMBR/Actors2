@@ -22,6 +22,7 @@ properties.Add( "ac2_p_editactor", {
 			net.WriteEntity( ent )
 		self:MsgEnd()
 		print("opened actor settings on Action")
+		OpenActorSettingsPanel()
 
 	end,
 	Receive = function( self, length, player )

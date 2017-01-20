@@ -7,38 +7,50 @@ if CLIENT then
 -- ## ----------------------------------- Actors2 ---------------------------------- ## --
 -- Main HTML Panel
 -- ## ------------------------------------------------------------------------------ ## --
-local NavMesh = false
+local CheckAddonTable = {}
+local NavString = ""
 
 function OpenWelcomePanel()
-	--[[Base = vgui.Create( "DFrame" )
+	-- To avoid a bug where the base panel becomes invalid
+	-- the HTML panel needs to be parented with a DFrame
+	-- in case of the bug, you can still close it.
+	Base = vgui.Create( "DFrame" )
 	Base:SetSize( ScrW()/1.5, ScrH()/1.5 )
 	Base:Center()
-	Base:SetTitle( AC2_LANG[A2LANG]["ac2_tool_category"] )
-	Base:SetVisible( true )
 	Base:SetDraggable( false )
 	Base:SetSizable( false )
-	Base:ShowCloseButton( false )]]--
+	Base:SetTitle( "" )
+	--Base:InvalidateLayout()
 
-	Wlc = vgui.Create( "DHTML" )
-	Wlc:SetSize( ScrW()/1.5, ScrH()/1.5 )
-	Wlc:Center()
-	Wlc:SetAllowLua( true )
-	Wlc:OpenURL( "asset://garrysmod/html/welcome.html" )
-	Wlc:MakePopup()
+	-- Creates the HTML Panel parented to the Base DPanel
+	if Base:IsValid() then
+		Wlc = vgui.Create( "DHTML", Base )
+		Wlc:Dock( FILL )
+		Wlc:SetAllowLua( true )
+		Wlc:OpenURL( "asset://garrysmod/html/welcome.html" )
 
-	--[[Wlc:AddFunction( "console", "luaprint", function( str )
-		Msg( str )
-	end )]]--
+		--[[Wlc:AddFunction( "console", "luaprint", function( str )
+			print( str )
+		end )]]--
 
-	-- Sends the Language to translate the HTML page
-	if IsValid( Wlc ) then
 		Wlc:QueueJavascript( "receiveLang( '" .. A2LANG .. "' )" )
-		Wlc:QueueJavascript( "checkNavMesh( '" .. tostring(NavMesh) .. "' )" )
+
+		if next( CheckAddonTable ) == nil then
+			Wlc:QueueJavascript( "checkAddon( 'true' )" )
+		elseif CheckAddonTable.AC2Nav then
+			Wlc:QueueJavascript( "checkAddon( 'false' )" )
+			Wlc:QueueJavascript( "getCheckAddonReason( '" .. CheckAddonTable.AC2Nav .. "' )" )
+		elseif CheckAddonTable.AC2Version then
+			Wlc:QueueJavascript( "checkAddon( 'false' )" )
+			Wlc:QueueJavascript( "getCheckAddonReason( '" .. CheckAddonTable.AC2Version .. "' )" )
+		end
 	end
+
+	Base:MakePopup()
 end
 
 net.Receive( "Ac2_OpenWelcomePanel", function()
-	NavMesh = net.ReadBool()
+	CheckAddonTable = net.ReadTable()
 	OpenWelcomePanel()
 end )
 
@@ -47,7 +59,9 @@ end )
 -- Functions called from the JS environment
 -- ## ------------------------------------------------------------------------------ ## --
 function CloseWelcomePanel()
-	if IsValid( Wlc ) then
+	if Base:IsValid() then
+		Base:Remove()
+	elseif Wlc:IsValid() then
 		Wlc:Remove()
 	end
 end

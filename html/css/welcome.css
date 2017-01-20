@@ -64,6 +64,13 @@ body {
     font-size: 1.5em;
 }
 
+.welcome-text.smallish{
+    font-size: 1em;
+	font-weight: 800;
+    text-align: left;
+	color: rgb(200, 160, 75);
+}
+
 .welcome-text.small{
     font-size: 0.7em;
 	font-weight: 800;

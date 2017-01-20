@@ -18,8 +18,12 @@
             <a class="button button-large green" onclick="nextPage();">SURE THING</a> <a class="button button-large red" onclick="closePanel();">NOT NOW</a>
         </div>
         <div class="welc-checks" do-translate="en">
-            <p class="welcome-text small" prop="nav"> <img src="asset://garrysmod/materials/icon16/tick.png" /> Addon verification done succefull! </p>
-            <p class="welcome-text small" prop="nonav"><img src="asset://garrysmod/materials/icon16/tick.png" /> An error ocurred, Actors2 may not work properly.</p></p>
+            <p class="welcome-text small" prop="check"> <img src="asset://garrysmod/materials/icon16/tick.png" /> Addon verification successful! </p>
+            <p class="welcome-text small" prop="nocheck">
+                <img src="asset://garrysmod/materials/icon16/cross.png" />
+                An error ocurred! Possible Reason: 
+                <span id="checkreason" class="welcome-text smallish"></span>
+            </p>
         </div>
 
         <!-- Português -->
@@ -30,8 +34,12 @@
             <a class="button button-large green" onclick="nextPage();">COM CERTEZA</a> <a class="button button-large red" onclick="closePanel();">AGORA NÃO</a>
         </div>
         <div class="welc-checks" do-translate="ptbr">
-            <p class="welcome-text small" prop="nav"><img src="asset://garrysmod/materials/icon16/tick.png" /> Verificação do addon feita com sucesso!</p>
-            <p class="welcome-text small" prop="nonav"><img src="asset://garrysmod/materials/icon16/tick.png" /> Ocorreu um erro, Atores2 pode não funcionar corretamente.</p></p>
+            <p class="welcome-text small" prop="check"><img src="asset://garrysmod/materials/icon16/tick.png" /> Verificação do addon feita com sucesso!</p>
+            <p class="welcome-text small" prop="nocheck">
+                <img src="asset://garrysmod/materials/icon16/cross.png" />
+                Ocorreu um erro! Possivel Razão: 
+                <span id="checkreason" class="welcome-text smallish"></span>
+            </p>
         </div>
 
     </div>

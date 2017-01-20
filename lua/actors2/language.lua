@@ -29,6 +29,16 @@ AC2_LANG = {
 		["ac2_tool_pm_sel_newpath"]			= "New Path was Added",
 		["ac2_tool_pm_sel_newnopath"]		= "Active Path has no points, can't create new Path",
 		["ac2_tool_pm_no_navmesh"]			= "This map doesn't have a Nav Mesh, Actors2 will not work correctly",
+
+		-- Welcome Panel
+		["ac2_welc_check_nav"]				= "No Navigation Mesh found",
+		["ac2_welc_check_version"]			= "Addon Out-of-Date",
+		["ac2_welc_check_vers404"]			= "Version not compared, no internet connection?",
+
+		-- Actor Settings Panel
+		["ac2_panelset_title"]				= "Actor Settings",
+		["ac2_panelset_btnclose"]			= "Close",
+		["ac2_panelset_btnhelp"]			= "Help",
 	},
 	["pt-BR"] = {
 		-- Ferramenta de Trajeto
@@ -56,6 +66,16 @@ AC2_LANG = {
 		["ac2_tool_pm_sel_newpath"]			= "Novo Trajeto foi Adicionado",
 		["ac2_tool_pm_sel_newnopath"]		= "O Trajeto atual não tem pontos, impossível criar novo Trajeto",
 		["ac2_tool_pm_no_navmesh"]			= "Esse mapa não possui um Nav Mesh, Atores2 não funcionará corretamente",
+
+		-- Painel de Boas Vindas
+		["ac2_welc_check_nav"]				= "Navigation Mesh não encontrado",
+		["ac2_welc_check_version"]			= "Addon Desatualizado",
+		["ac2_welc_check_vers404"]			= "Versão não foi comparada, sem conexão a internet?",
+
+		-- Painel Configurações do Ator
+		["ac2_panelset_title"]				= "Configurações do Ator",
+		["ac2_panelset_btnclose"]			= "Fechar",
+		["ac2_panelset_btnhelp"]			= "Ajuda",
 	}
 }
 

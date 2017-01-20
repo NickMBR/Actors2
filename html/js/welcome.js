@@ -1,21 +1,28 @@
 var Page = 0;
-var Zuzu = "";
+var CheckAddon = "";
+var CheckAddonReason = "";
 
 function closePanel() {
-    lua.Run( "CloseWelcomePanel()" );
+    setTimeout(function() { 
+        lua.Run( "CloseWelcomePanel()" );
+    }, 100);
 }
 
 function hideAllPages() {
     $('[change-pg="1"]').hide();
     $('[change-pg="2"]').hide();
-    $('[prop="nav"]').hide();
-    $('[prop="nonav"]').hide();
+    $('[prop="check"]').hide();
+    $('[prop="nocheck"]').hide();
     Page = 0;
     nextPage();
 }
 
-function checkNavMesh( str ) {
-    this.Zuzu = str;
+function checkAddon( str ) {
+    this.CheckAddon = str;
+}
+
+function getCheckAddonReason( reason ) {
+    this.CheckAddonReason = reason;
 }
 
 function nextPage() {
@@ -24,13 +31,17 @@ function nextPage() {
         Page = 1;
         $('[change-pg="1"]').show(500);
 
-        $("a").on( "mouseenter", function () { lua.PlaySound( "ambient/water/rain_drip1.wav" ); } );
-        $("a").on( "click", function () { lua.PlaySound( "buttons/lightswitch2.wav" ); } );
+        $("a").on( "mouseenter", function () { lua.PlaySound( "ui/csgo_ui_contract_type3.wav" ); } );
+        $("a").on( "click", function () { lua.PlaySound( "ui/csgo_ui_contract_type1.wav" ); } );
 
         setTimeout(function() { 
-           if (this.Zuzu == "true") { $('[prop="nav"]').fadeIn(500); }
-            else { $('[prop="nonav"]').fadeIn(500); }
-        }, 500);
+            if (this.CheckAddon == "true") { $('[prop="check"]').fadeIn(500); }
+            else { 
+                $('[prop="nocheck"]').fadeIn(500);
+                document.getElementById("checkreason").innerHTML = this.CheckAddonReason; 
+            }
+            lua.PlaySound( "ui/hint.wav" );
+        }, 800);
     }
 
     else if (Page == 1) { 
