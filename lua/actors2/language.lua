@@ -39,6 +39,8 @@ AC2_LANG = {
 		["ac2_panelset_title"]				= "Actor Settings",
 		["ac2_panelset_btnclose"]			= "Close",
 		["ac2_panelset_btnhelp"]			= "Help",
+		["ac2_panelset_filterby"]			= "Filter By:",
+		["ac2_panelset_search"]				= "Search...",
 	},
 	["pt-BR"] = {
 		-- Ferramenta de Trajeto
@@ -76,6 +78,8 @@ AC2_LANG = {
 		["ac2_panelset_title"]				= "Configurações do Ator",
 		["ac2_panelset_btnclose"]			= "Fechar",
 		["ac2_panelset_btnhelp"]			= "Ajuda",
+		["ac2_panelset_filterby"]			= "Filtrar por:",
+		["ac2_panelset_search"]				= "Pesquisar...",
 	}
 }
 

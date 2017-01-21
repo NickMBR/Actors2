@@ -23,6 +23,11 @@ surface.CreateFont( "AC2_F20", {
 local RedBtnHover, RedBtnTextHover, WhiteBtnHover, WhiteBtnTextHover, BlueBtnHover, BlueBtnTextHover = Color( 35, 35, 35, 255 )
 
 -- ## ----------------------------------- Actors2 ---------------------------------- ## --
+-- Open the Panel
+-- ## ------------------------------------------------------------------------------ ## --
+function OpenActorSettingsPanel()
+
+-- ## ----------------------------------- Actors2 ---------------------------------- ## --
 -- Hover Functions
 -- ## ------------------------------------------------------------------------------ ## --
 function ButtonHover( btn, class ) 
@@ -52,23 +57,82 @@ function ButtonHover( btn, class )
 end
 
 -- ## ----------------------------------- Actors2 ---------------------------------- ## --
--- Fade Functions
+-- Updates the Entity Settings
 -- ## ------------------------------------------------------------------------------ ## --
-function fadePanelAlpha( str )
+function UpdateFromConvars()
+    -- Sets the entity to Draw
+    local modelz = GetConVar( "actors2_pathmaker_ac2_model" )
+
+    if IsValid( mdl ) then
+        mdl:SetModel( modelz:GetString() )
+        mdl.Entity:SetPos( Vector( -120, 0, -55 ) )
+
+        if mdl.Entity:GetModelRadius() > 80 or mdl.Entity:GetModelRadius() < 72 then
+            mdl:SetLookAt( Vector( -200, 0, -22 ) )
+            mdl:SetCamPos( Vector( 100, 0, 0 ) )
+        else
+            mdl:SetLookAt( Vector( -120, 0, -22 ) )
+            mdl:SetCamPos( Vector( 0, 0, 0 ) )
+        end
+    end
+end
+
+-- ## ----------------------------------- Actors2 ---------------------------------- ## --
+-- Makes the List of default models
+-- ## ------------------------------------------------------------------------------ ## --
+function CreateModelList( mdl_list )
+    MdlSelect = vgui.Create( "DPanelSelect", ModelListBase )
+    MdlSelect:Dock( FILL )
+
+    for name, model in SortedPairs( mdl_list ) do
+        local icon = vgui.Create( "SpawnIcon", painel )
+        icon:SetModel( model )
+        icon:SetSize( 64, 64 )
+        icon:SetTooltip( name )
+
+        MdlSelect:AddPanel( icon, { actors2_pathmaker_ac2_model = model } )
+    end
+
+    function MdlSelect:OnActivePanelChanged( old, new )
+        --[[if ( old != new ) then
+            RunConsoleCommand( "nmactors_ac_bodygroup", "0" )
+            RunConsoleCommand( "nmactors_ac_skin", "0" )
+        end	]]--
+        timer.Simple( 0.1, function() UpdateFromConvars() end )
+    end
+end
+
+-- ## ----------------------------------- Actors2 ---------------------------------- ## --
+-- Fade Functions with Search
+-- ## ------------------------------------------------------------------------------ ## --
+function fadePanelAlpha( str, search_str )
     if IsValid( MdlSelect ) then MdlSelect:Remove() end
     if IsValid( ModelListBase ) then
         ModelListBase:AlphaTo( 0, 0, 0 )
         ModelListBase:AlphaTo( 255, 1, 0 )
 
-        if str == "human" then
-            local hmn_list = list.Get( "NPCModelList_Human" )
-            CreateModelList( hmn_list )
-        elseif str == "alien" then
-            local aln_list = list.Get( "NPCModelList_Alien" )
-            CreateModelList( aln_list )
-        elseif str == "custom" then
-            local custom_list = player_manager.AllValidModels()
-            CreateModelList( custom_list )
+        local HC_ModelList = list.Get( "NPCModelList_Default" )
+        local NPC_NiceList = list.Get( "FormatedNPCList" )
+        local PlyModelsList = player_manager.AllValidModels()
+
+        local npc_list = table.Merge( HC_ModelList, NPC_NiceList )
+        local SearchTable = table.Merge( npc_list, PlyModelsList )
+
+        local ResultList = {}
+
+        if str == "npcs" then
+            CreateModelList( npc_list )
+        elseif str == "plymodels" then
+            CreateModelList( PlyModelsList )
+        elseif str == "search" then
+            print("search was: "..search_str)
+
+            for k, v in SortedPairs( SearchTable ) do
+                if string.find( v, search_str, 0, true ) or string.find( k, search_str, 0, true ) then
+                     table.insert(ResultList, v)
+                end
+            end
+            CreateModelList( ResultList )
         end
     end
 end
@@ -76,10 +140,12 @@ end
 -- ## ----------------------------------- Actors2 ---------------------------------- ## --
 -- Base Panel
 -- ## ------------------------------------------------------------------------------ ## --
-function OpenActorSettingsPanel()
-Base = vgui.Create( "DPanel" )
-Base:SetSize( ScrW()/1.5, ScrH()/1.5 )
-Base:SetContentAlignment( 5 )
+Base = vgui.Create( "DFrame" )
+Base:SetSize( ScrW()/1.1, ScrH()/1.5 )
+Base:SetTitle("")
+Base:SetDraggable( false )
+Base:SetSizable( false )
+Base:ShowCloseButton( false )
 Base:Center()
 Base.Paint = function()
     surface.SetDrawColor( 35, 35, 35, 253 )
@@ -143,16 +209,14 @@ ModelBase:SetPaintBackground( false )
 -- ## ----------------------------------- Actors2 ---------------------------------- ## --
 -- Draw Model Panel and Functions
 -- ## ------------------------------------------------------------------------------ ## --
-local mdl = vgui.Create( "DModelPanel", ModelBase)
+mdl = vgui.Create( "DModelPanel", ModelBase)
 mdl:Dock( FILL )
-mdl:SetFOV( 40 )
-mdl:SetCamPos( Vector( 0, 0, 0 ) )
 mdl:SetDirectionalLight( BOX_RIGHT, Color( 255, 160, 80, 255 ) )
 mdl:SetDirectionalLight( BOX_LEFT, Color( 80, 160, 255, 255 ) )
 mdl:SetAmbientLight( Vector( -64, -64, -64 ) )
 mdl:SetAnimated( true )
 mdl.Angles = Angle( 0, 0, 0 )
-mdl:SetLookAt( Vector( -120, 0, -22 ) )
+mdl:SetFOV( 50 )
 
 -- Rotates the entity with the mouse
 function mdl:DragMousePress()
@@ -179,7 +243,7 @@ end
 -- Actor List - Buttons Container
 -- ## ------------------------------------------------------------------------------ ## --
 local ButtonListBase = vgui.Create( "DPanel", Base )
-ButtonListBase:SetPos( ( Base:GetWide()-Base:GetWide()/2 )-100, 40 )
+ButtonListBase:SetPos( ( Base:GetWide()-Base:GetWide()/2 )-100, 45 )
 ButtonListBase:SetSize( Base:GetWide()/2+90, 80 )
 ButtonListBase:SetPaintBackground( false )
 
@@ -187,56 +251,68 @@ ButtonListBase.Paint = function()
     surface.SetTextColor( 210, 210, 210, 255 )
     surface.SetFont( "AC2_F20" )
     surface.SetTextPos( 0, 5 )
-	surface.DrawText( "Choose a Model:" )
+	surface.DrawText( AC2_LANG[A2LANG]["ac2_panelset_filterby"] )
 end
 
--- Human Models Button
+-- Npcs Models Button
 local ListBtnMain = vgui.Create( "DButton", ButtonListBase )
 ListBtnMain:SetPos( 0, 30 )
 ListBtnMain:SetText( "" )
 ListBtnMain:SetSize( 100, 30 )
 ListBtnMain.DoClick = function()
-	fadePanelAlpha( "human" )
+	fadePanelAlpha( "npcs", "" )
 end
 ListBtnMain.Paint = function()
     ButtonHover( ListBtnMain, "blue" )
     surface.SetDrawColor( BlueBtnHover )
     surface.DrawRect( 0, 0, ListBtnMain:GetWide(), ListBtnMain:GetTall() )
 
-    draw.SimpleText( "Human", "AC2_F15", 50, 15, BlueBtnTextHover, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
+    draw.SimpleText( "NPCs", "AC2_F15", 50, 15, BlueBtnTextHover, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
 end
 
--- Alien Models Button
-local ListBtnCitizen = vgui.Create( "DButton", ButtonListBase )
-ListBtnCitizen:SetPos( 105, 30 )
-ListBtnCitizen:SetText( "" )
-ListBtnCitizen:SetSize( 100, 30 )
-ListBtnCitizen.DoClick = function()
-	fadePanelAlpha( "alien" )
+-- Player Models Button
+local ListBtnPlyModls = vgui.Create( "DButton", ButtonListBase )
+ListBtnPlyModls:SetPos( 105, 30 )
+ListBtnPlyModls:SetText( "" )
+ListBtnPlyModls:SetSize( 100, 30 )
+ListBtnPlyModls.DoClick = function()
+	fadePanelAlpha( "plymodels", "" )
 end
-ListBtnCitizen.Paint = function()
-    ButtonHover( ListBtnCitizen, "blue" )
+ListBtnPlyModls.Paint = function()
+    ButtonHover( ListBtnPlyModls, "blue" )
     surface.SetDrawColor( BlueBtnHover )
-    surface.DrawRect( 0, 0, ListBtnCitizen:GetWide(), ListBtnCitizen:GetTall() )
+    surface.DrawRect( 0, 0, ListBtnPlyModls:GetWide(), ListBtnPlyModls:GetTall() )
 
-    draw.SimpleText( "Alien", "AC2_F15", 50, 15, BlueBtnTextHover, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
+    draw.SimpleText( "PlayerModels", "AC2_F15", 50, 15, BlueBtnTextHover, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
 end
 
--- Custom Models Button
--- Attempt to search for custom ones ?
-local ListBtnCustom = vgui.Create( "DButton", ButtonListBase )
-ListBtnCustom:SetPos( 210, 30 )
-ListBtnCustom:SetText( "" )
-ListBtnCustom:SetSize( 100, 30 )
-ListBtnCustom.DoClick = function()
-	fadePanelAlpha( "custom" )
+-- Search Models TextBox
+local ListSearch = vgui.Create( "DTextEntry", ButtonListBase ) -- create the form as a child of frame
+ListSearch:SetPos( 210, 30 )
+ListSearch:SetSize( 200, 30 )
+ListSearch:SetText( AC2_LANG[A2LANG]["ac2_panelset_search"] )
+ListSearch:SetFont( "AC2_F15" )
+ListSearch.OnEnter = function( self )
+    if self:GetValue() != "" then
+	    fadePanelAlpha( "search", self:GetValue() )
+    end
 end
-ListBtnCustom.Paint = function()
-    ButtonHover( ListBtnCustom, "blue" )
-    surface.SetDrawColor( BlueBtnHover )
-    surface.DrawRect( 0, 0, ListBtnCustom:GetWide(), ListBtnCustom:GetTall() )
 
-    draw.SimpleText( "Custom", "AC2_F15", 50, 15, BlueBtnTextHover, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
+ListSearch.OnGetFocus = function( self )
+	if self:GetValue() == AC2_LANG[A2LANG]["ac2_panelset_search"] then
+        self:SetText( "" )
+    end
+end
+
+ListSearch.OnLoseFocus = function( self )
+    self:SetText( AC2_LANG[A2LANG]["ac2_panelset_search"] )
+end
+
+ListSearch.Paint = function( self )
+	surface.SetDrawColor( BlueBtnHover )
+    surface.DrawRect( 0, 0, ListSearch:GetWide(), ListSearch:GetTall() )
+
+    self:DrawTextEntryText( Color(210,210,210), Color(35,35,35), Color(210,210,210) )
 end
 
 -- ## ----------------------------------- Actors2 ---------------------------------- ## --
@@ -248,23 +324,7 @@ ModelListBase:SetSize( Base:GetWide()/2+90, Base:GetTall()-120 )
 ModelListBase:SetPaintBackground( false )
 
 if IsValid(ModelListBase) then 
-    fadePanelAlpha( "human" )
-end
-
-local function UpdateFromConvars()
-    -- Sets the entity to Draw
-    local modelz = GetConVar( "actors2_pathmaker_ac2_model" )
-    mdl:SetModel( modelz:GetString() )
-    mdl.Entity:SetPos( Vector( -120, 0, -55 ) )
-end
-
-function MdlSelect:OnActivePanelChanged( old, new )
-    --[[if ( old != new ) then
-        RunConsoleCommand( "nmactors_ac_bodygroup", "0" )
-        RunConsoleCommand( "nmactors_ac_skin", "0" )
-    end	]]--
-    timer.Simple( 0.1, function() UpdateFromConvars() end )
-
+    fadePanelAlpha( "npcs", "" )
 end
 
 -- Opens It!
@@ -272,24 +332,6 @@ Base:MakePopup()
 UpdateFromConvars()
 
 end -- End OpenPanel function
-
--- ## ----------------------------------- Actors2 ---------------------------------- ## --
--- Makes the List of default models
--- ## ------------------------------------------------------------------------------ ## --
-function CreateModelList( mdl_list )
-    MdlSelect = vgui.Create( "DPanelSelect", ModelListBase )
-    MdlSelect:Dock( FILL )
-
-    for name, model in SortedPairs( mdl_list ) do
-        local icon = vgui.Create( "SpawnIcon", painel )
-        icon:SetModel( model )
-        icon:SetSize( 64, 64 )
-        icon:SetTooltip( name )
-
-        MdlSelect:AddPanel( icon, { actors2_pathmaker_ac2_model = model } )
-            
-    end
-end
 
 -- ## ----------------------------------- Actors2 ---------------------------------- ## --
 -- Debug
@@ -302,104 +344,108 @@ end
 end]]--
 
 -- ## ----------------------------------- Actors2 ---------------------------------- ## --
--- Default model list
+-- Default Hardcoded and NPC lists 
 -- ## ------------------------------------------------------------------------------ ## --
-list.Set ( "NPCModelList_Human", "Mossman", "models/mossman.mdl" )
-list.Set ( "NPCModelList_Human", "Alyx", "models/alyx.mdl" )
-list.Set ( "NPCModelList_Human", "Barney", "models/Barney.mdl" )
-list.Set ( "NPCModelList_Human", "Breen", "models/breen.mdl" )
-list.Set ( "NPCModelList_Human", "Eli", "models/Eli.mdl" )
-list.Set ( "NPCModelList_Human", "Gman", "models/gman_high.mdl" )
-list.Set ( "NPCModelList_Human", "Kleiner", "models/Kleiner.mdl" )
-list.Set ( "NPCModelList_Human", "Monk", "models/monk.mdl" )
-list.Set ( "NPCModelList_Human", "Odessa", "models/odessa.mdl" )
-list.Set ( "NPCModelList_Human", "Vortigaunt", "models/vortigaunt.mdl" )
-list.Set ( "NPCModelList_Human", "Dog", "models/dog.mdl" )
+for k, v in SortedPairs( list.Get( "NPC" ) ) do
+    list.Set( "FormatedNPCList", k, v.Model)
+end
 
-list.Set ( "NPCModelList_Human", "Female1", "models/Humans/Group01/Female_01.mdl" )
-list.Set ( "NPCModelList_Human", "Female2", "models/Humans/Group01/Female_02.mdl" )
-list.Set ( "NPCModelList_Human", "Female3", "models/Humans/Group01/Female_03.mdl" )
-list.Set ( "NPCModelList_Human", "Female4", "models/Humans/Group01/Female_04.mdl" )
-list.Set ( "NPCModelList_Human", "Female5", "models/Humans/Group01/Female_06.mdl" )
-list.Set ( "NPCModelList_Human", "Female6", "models/Humans/Group01/Female_07.mdl" )
+list.Set ( "NPCModelList_Default", "Mossman", "models/mossman.mdl" )
+list.Set ( "NPCModelList_Default", "Alyx", "models/alyx.mdl" )
+list.Set ( "NPCModelList_Default", "Barney", "models/Barney.mdl" )
+list.Set ( "NPCModelList_Default", "Breen", "models/breen.mdl" )
+list.Set ( "NPCModelList_Default", "Eli", "models/Eli.mdl" )
+list.Set ( "NPCModelList_Default", "Gman", "models/gman_high.mdl" )
+list.Set ( "NPCModelList_Default", "Kleiner", "models/Kleiner.mdl" )
+list.Set ( "NPCModelList_Default", "Monk", "models/monk.mdl" )
+list.Set ( "NPCModelList_Default", "Odessa", "models/odessa.mdl" )
+list.Set ( "NPCModelList_Default", "Vortigaunt", "models/vortigaunt.mdl" )
+list.Set ( "NPCModelList_Default", "Dog", "models/dog.mdl" )
 
-list.Set ( "NPCModelList_Human", "Female7", "models/Humans/Group02/Female_01.mdl" )
-list.Set ( "NPCModelList_Human", "Female8", "models/Humans/Group02/Female_02.mdl" )
-list.Set ( "NPCModelList_Human", "Female9", "models/Humans/Group02/Female_03.mdl" )
-list.Set ( "NPCModelList_Human", "Female10", "models/Humans/Group02/Female_04.mdl" )
-list.Set ( "NPCModelList_Human", "Female11", "models/Humans/Group02/Female_06.mdl" )
-list.Set ( "NPCModelList_Human", "Female12", "models/Humans/Group02/Female_07.mdl" )
+list.Set ( "NPCModelList_Default", "Female1", "models/Humans/Group01/Female_01.mdl" )
+list.Set ( "NPCModelList_Default", "Female2", "models/Humans/Group01/Female_02.mdl" )
+list.Set ( "NPCModelList_Default", "Female3", "models/Humans/Group01/Female_03.mdl" )
+list.Set ( "NPCModelList_Default", "Female4", "models/Humans/Group01/Female_04.mdl" )
+list.Set ( "NPCModelList_Default", "Female5", "models/Humans/Group01/Female_06.mdl" )
+list.Set ( "NPCModelList_Default", "Female6", "models/Humans/Group01/Female_07.mdl" )
 
-list.Set ( "NPCModelList_Human", "Female13", "models/Humans/Group03/Female_01.mdl" )
-list.Set ( "NPCModelList_Human", "Female14", "models/Humans/Group03/Female_02.mdl" )
-list.Set ( "NPCModelList_Human", "Female15", "models/Humans/Group03/Female_03.mdl" )
-list.Set ( "NPCModelList_Human", "Female16", "models/Humans/Group03/Female_04.mdl" )
-list.Set ( "NPCModelList_Human", "Female17", "models/Humans/Group03/Female_06.mdl" )
-list.Set ( "NPCModelList_Human", "Female18", "models/Humans/Group03/Female_07.mdl" )
+list.Set ( "NPCModelList_Default", "Female7", "models/Humans/Group02/Female_01.mdl" )
+list.Set ( "NPCModelList_Default", "Female8", "models/Humans/Group02/Female_02.mdl" )
+list.Set ( "NPCModelList_Default", "Female9", "models/Humans/Group02/Female_03.mdl" )
+list.Set ( "NPCModelList_Default", "Female10", "models/Humans/Group02/Female_04.mdl" )
+list.Set ( "NPCModelList_Default", "Female11", "models/Humans/Group02/Female_06.mdl" )
+list.Set ( "NPCModelList_Default", "Female12", "models/Humans/Group02/Female_07.mdl" )
 
-list.Set ( "NPCModelList_Human", "CFemale1", "models/Humans/Group03m/Female_01.mdl" )
-list.Set ( "NPCModelList_Human", "CFemale2", "models/Humans/Group03m/Female_02.mdl" )
-list.Set ( "NPCModelList_Human", "CFemale3", "models/Humans/Group03m/Female_03.mdl" )
-list.Set ( "NPCModelList_Human", "CFemale4", "models/Humans/Group03m/Female_04.mdl" )
-list.Set ( "NPCModelList_Human", "CFemale5", "models/Humans/Group03m/Female_06.mdl" )
-list.Set ( "NPCModelList_Human", "CFemale6", "models/Humans/Group03m/Female_07.mdl" )
+list.Set ( "NPCModelList_Default", "Female13", "models/Humans/Group03/Female_01.mdl" )
+list.Set ( "NPCModelList_Default", "Female14", "models/Humans/Group03/Female_02.mdl" )
+list.Set ( "NPCModelList_Default", "Female15", "models/Humans/Group03/Female_03.mdl" )
+list.Set ( "NPCModelList_Default", "Female16", "models/Humans/Group03/Female_04.mdl" )
+list.Set ( "NPCModelList_Default", "Female17", "models/Humans/Group03/Female_06.mdl" )
+list.Set ( "NPCModelList_Default", "Female18", "models/Humans/Group03/Female_07.mdl" )
 
-list.Set ( "NPCModelList_Human", "Male1", "models/Humans/Group01/Male_01.mdl" )
-list.Set ( "NPCModelList_Human", "Male2", "models/Humans/Group01/Male_02.mdl" )
-list.Set ( "NPCModelList_Human", "Male3", "models/Humans/Group01/Male_03.mdl" )
-list.Set ( "NPCModelList_Human", "Male4", "models/Humans/Group01/Male_04.mdl" )
-list.Set ( "NPCModelList_Human", "Male5", "models/Humans/Group01/Male_05.mdl" )
-list.Set ( "NPCModelList_Human", "Male6", "models/Humans/Group01/Male_06.mdl" )
-list.Set ( "NPCModelList_Human", "Male7", "models/Humans/Group01/Male_07.mdl" )
-list.Set ( "NPCModelList_Human", "Male8", "models/Humans/Group01/Male_08.mdl" )
-list.Set ( "NPCModelList_Human", "Male9", "models/Humans/Group01/Male_09.mdl" )
-list.Set ( "NPCModelList_Human", "Male10", "models/Humans/Group01/Male_Cheaple.mdl" )
+list.Set ( "NPCModelList_Default", "CFemale1", "models/Humans/Group03m/Female_01.mdl" )
+list.Set ( "NPCModelList_Default", "CFemale2", "models/Humans/Group03m/Female_02.mdl" )
+list.Set ( "NPCModelList_Default", "CFemale3", "models/Humans/Group03m/Female_03.mdl" )
+list.Set ( "NPCModelList_Default", "CFemale4", "models/Humans/Group03m/Female_04.mdl" )
+list.Set ( "NPCModelList_Default", "CFemale5", "models/Humans/Group03m/Female_06.mdl" )
+list.Set ( "NPCModelList_Default", "CFemale6", "models/Humans/Group03m/Female_07.mdl" )
 
-list.Set ( "NPCModelList_Human", "Male11", "models/Humans/Group02/Male_01.mdl" )
-list.Set ( "NPCModelList_Human", "Male12", "models/Humans/Group02/Male_02.mdl" )
-list.Set ( "NPCModelList_Human", "Male13", "models/Humans/Group02/Male_03.mdl" )
-list.Set ( "NPCModelList_Human", "Male14", "models/Humans/Group02/Male_04.mdl" )
-list.Set ( "NPCModelList_Human", "Male15", "models/Humans/Group02/Male_05.mdl" )
-list.Set ( "NPCModelList_Human", "Male16", "models/Humans/Group02/Male_06.mdl" )
-list.Set ( "NPCModelList_Human", "Male17", "models/Humans/Group02/Male_07.mdl" )
-list.Set ( "NPCModelList_Human", "Male18", "models/Humans/Group02/Male_08.mdl" )
-list.Set ( "NPCModelList_Human", "Male19", "models/Humans/Group02/Male_09.mdl" )
+list.Set ( "NPCModelList_Default", "Male1", "models/Humans/Group01/Male_01.mdl" )
+list.Set ( "NPCModelList_Default", "Male2", "models/Humans/Group01/Male_02.mdl" )
+list.Set ( "NPCModelList_Default", "Male3", "models/Humans/Group01/Male_03.mdl" )
+list.Set ( "NPCModelList_Default", "Male4", "models/Humans/Group01/Male_04.mdl" )
+list.Set ( "NPCModelList_Default", "Male5", "models/Humans/Group01/Male_05.mdl" )
+list.Set ( "NPCModelList_Default", "Male6", "models/Humans/Group01/Male_06.mdl" )
+list.Set ( "NPCModelList_Default", "Male7", "models/Humans/Group01/Male_07.mdl" )
+list.Set ( "NPCModelList_Default", "Male8", "models/Humans/Group01/Male_08.mdl" )
+list.Set ( "NPCModelList_Default", "Male9", "models/Humans/Group01/Male_09.mdl" )
+list.Set ( "NPCModelList_Default", "Male10", "models/Humans/Group01/Male_Cheaple.mdl" )
 
-list.Set ( "NPCModelList_Human", "Male20", "models/Humans/Group03/Male_01.mdl" )
-list.Set ( "NPCModelList_Human", "Male21", "models/Humans/Group03/Male_02.mdl" )
-list.Set ( "NPCModelList_Human", "Male22", "models/Humans/Group03/Male_03.mdl" )
-list.Set ( "NPCModelList_Human", "Male23", "models/Humans/Group03/Male_04.mdl" )
-list.Set ( "NPCModelList_Human", "Male24", "models/Humans/Group03/Male_05.mdl" )
-list.Set ( "NPCModelList_Human", "Male25", "models/Humans/Group03/Male_06.mdl" )
-list.Set ( "NPCModelList_Human", "Male26", "models/Humans/Group03/Male_07.mdl" )
-list.Set ( "NPCModelList_Human", "Male27", "models/Humans/Group03/Male_08.mdl" )
-list.Set ( "NPCModelList_Human", "Male28", "models/Humans/Group03/Male_09.mdl" )
+list.Set ( "NPCModelList_Default", "Male11", "models/Humans/Group02/Male_01.mdl" )
+list.Set ( "NPCModelList_Default", "Male12", "models/Humans/Group02/Male_02.mdl" )
+list.Set ( "NPCModelList_Default", "Male13", "models/Humans/Group02/Male_03.mdl" )
+list.Set ( "NPCModelList_Default", "Male14", "models/Humans/Group02/Male_04.mdl" )
+list.Set ( "NPCModelList_Default", "Male15", "models/Humans/Group02/Male_05.mdl" )
+list.Set ( "NPCModelList_Default", "Male16", "models/Humans/Group02/Male_06.mdl" )
+list.Set ( "NPCModelList_Default", "Male17", "models/Humans/Group02/Male_07.mdl" )
+list.Set ( "NPCModelList_Default", "Male18", "models/Humans/Group02/Male_08.mdl" )
+list.Set ( "NPCModelList_Default", "Male19", "models/Humans/Group02/Male_09.mdl" )
 
-list.Set ( "NPCModelList_Human", "CMale1", "models/Humans/Group03m/Male_01.mdl" )
-list.Set ( "NPCModelList_Human", "CMale2", "models/Humans/Group03m/Male_02.mdl" )
-list.Set ( "NPCModelList_Human", "CMale3", "models/Humans/Group03m/Male_03.mdl" )
-list.Set ( "NPCModelList_Human", "CMale4", "models/Humans/Group03m/Male_04.mdl" )
-list.Set ( "NPCModelList_Human", "CMale5", "models/Humans/Group03m/Male_05.mdl" )
-list.Set ( "NPCModelList_Human", "CMale6", "models/Humans/Group03m/Male_06.mdl" )
-list.Set ( "NPCModelList_Human", "CMale7", "models/Humans/Group03m/Male_07.mdl" )
-list.Set ( "NPCModelList_Human", "CMale8", "models/Humans/Group03m/Male_08.mdl" )
-list.Set ( "NPCModelList_Human", "CMale9", "models/Humans/Group03m/Male_09.mdl" )
+list.Set ( "NPCModelList_Default", "Male20", "models/Humans/Group03/Male_01.mdl" )
+list.Set ( "NPCModelList_Default", "Male21", "models/Humans/Group03/Male_02.mdl" )
+list.Set ( "NPCModelList_Default", "Male22", "models/Humans/Group03/Male_03.mdl" )
+list.Set ( "NPCModelList_Default", "Male23", "models/Humans/Group03/Male_04.mdl" )
+list.Set ( "NPCModelList_Default", "Male24", "models/Humans/Group03/Male_05.mdl" )
+list.Set ( "NPCModelList_Default", "Male25", "models/Humans/Group03/Male_06.mdl" )
+list.Set ( "NPCModelList_Default", "Male26", "models/Humans/Group03/Male_07.mdl" )
+list.Set ( "NPCModelList_Default", "Male27", "models/Humans/Group03/Male_08.mdl" )
+list.Set ( "NPCModelList_Default", "Male28", "models/Humans/Group03/Male_09.mdl" )
 
-list.Set ( "NPCModelList_Human", "Police", "models/Police.mdl" )
-list.Set ( "NPCModelList_Human", "Combine Super Soldier", "models/Combine_Super_Soldier.mdl" )
-list.Set ( "NPCModelList_Human", "Combine PrisonGuard", "models/Combine_Soldier_PrisonGuard.mdl" )
-list.Set ( "NPCModelList_Human", "Combine Soldier", "models/Combine_Soldier.mdl" )
+list.Set ( "NPCModelList_Default", "CMale1", "models/Humans/Group03m/Male_01.mdl" )
+list.Set ( "NPCModelList_Default", "CMale2", "models/Humans/Group03m/Male_02.mdl" )
+list.Set ( "NPCModelList_Default", "CMale3", "models/Humans/Group03m/Male_03.mdl" )
+list.Set ( "NPCModelList_Default", "CMale4", "models/Humans/Group03m/Male_04.mdl" )
+list.Set ( "NPCModelList_Default", "CMale5", "models/Humans/Group03m/Male_05.mdl" )
+list.Set ( "NPCModelList_Default", "CMale6", "models/Humans/Group03m/Male_06.mdl" )
+list.Set ( "NPCModelList_Default", "CMale7", "models/Humans/Group03m/Male_07.mdl" )
+list.Set ( "NPCModelList_Default", "CMale8", "models/Humans/Group03m/Male_08.mdl" )
+list.Set ( "NPCModelList_Default", "CMale9", "models/Humans/Group03m/Male_09.mdl" )
 
-list.Set ( "NPCModelList_Alien", "Headcrab", "models/headcrab.mdl" )
-list.Set ( "NPCModelList_Alien", "Headcrab Black", "models/headcrabblack.mdl" )
-list.Set ( "NPCModelList_Alien", "Lamarr", "models/Lamarr.mdl" )
-list.Set ( "NPCModelList_Alien", "Zombie", "models/Zombie/Classic.mdl" )
-list.Set ( "NPCModelList_Alien", "Zombie Torso", "models/Zombie/Classic_torso.mdl" )
-list.Set ( "NPCModelList_Alien", "Fast Zombie", "models/Zombie/Fast.mdl" )
-list.Set ( "NPCModelList_Alien", "Zombie Poison", "models/Zombie/Poison.mdl" )
+list.Set ( "NPCModelList_Default", "Police", "models/Police.mdl" )
+list.Set ( "NPCModelList_Default", "Combine Super Soldier", "models/Combine_Super_Soldier.mdl" )
+list.Set ( "NPCModelList_Default", "Combine PrisonGuard", "models/Combine_Soldier_PrisonGuard.mdl" )
+list.Set ( "NPCModelList_Default", "Combine Soldier", "models/Combine_Soldier.mdl" )
 
-list.Set ( "NPCModelList_Alien", "Antlion", "models/AntLion.mdl" )
-list.Set ( "NPCModelList_Alien", "Antlion Guard", "models/antlion_guard.mdl" )
+list.Set ( "NPCModelList_Default", "Headcrab", "models/headcrab.mdl" )
+list.Set ( "NPCModelList_Default", "Headcrab Black", "models/headcrabblack.mdl" )
+list.Set ( "NPCModelList_Default", "Lamarr", "models/Lamarr.mdl" )
+list.Set ( "NPCModelList_Default", "Zombie", "models/Zombie/Classic.mdl" )
+list.Set ( "NPCModelList_Default", "Zombie Torso", "models/Zombie/Classic_torso.mdl" )
+list.Set ( "NPCModelList_Default", "Fast Zombie", "models/Zombie/Fast.mdl" )
+list.Set ( "NPCModelList_Default", "Zombie Poison", "models/Zombie/Poison.mdl" )
+
+list.Set ( "NPCModelList_Default", "Antlion", "models/AntLion.mdl" )
+list.Set ( "NPCModelList_Default", "Antlion Guard", "models/antlion_guard.mdl" )
 
 // Lista de Animacoes
 

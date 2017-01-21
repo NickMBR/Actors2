@@ -175,8 +175,6 @@ function TOOL:LeftClick( trace )
 	if trace.Entity:IsPlayer() then return false end
 	if CLIENT then return true end
 
-	--PrintTable(list.Get("NPC"))
-
 	-- Opens the Welcome Panel if it's the first time
 	if self:GetClientNumber( "ac2_welcome" ) == 1 then
 		self:CheckAddonTest()
@@ -561,8 +559,6 @@ if SERVER then
 			local PathP = PathPTBL[PathCount]
 			local ACEnt = ents.GetByIndex(PathP[1])
 			local ACName = string.format("%s%s", "ac2_", tostring(PathP[1]))
-
-			PrintTable(ACEnt:GetTable().ActorSettings)
 
 			if IsValid( ACEnt:GetTable().ActorSettings.ActorEnt ) and ACEnt:GetTable().ActorSettings.ActorEnt:GetName() == ACName then
 				ACEnt:GetTable().ActorSettings.ActorEnt:Remove()
