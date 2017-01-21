@@ -27,6 +27,9 @@ TOOL.ClientConVar =
 	-- Spawn/Remove Keys
 	[ "ac2_spawn" ]	= "52",
 	[ "ac2_despawn" ]	= "51",
+
+	-- Actor Settings Panel
+	[ "ac2_model" ] = "models/alyx.mdl"
 }
 
 -- ## ----------------------------------- Actors2 ---------------------------------- ## --
@@ -172,8 +175,10 @@ function TOOL:LeftClick( trace )
 	if trace.Entity:IsPlayer() then return false end
 	if CLIENT then return true end
 
+	--PrintTable(list.Get("NPC"))
+
 	-- Opens the Welcome Panel if it's the first time
-	if self:GetClientNumber( "ac2_welcome" ) != 0 then
+	if self:GetClientNumber( "ac2_welcome" ) == 1 then
 		self:CheckAddonTest()
 		return false
 	else
@@ -557,8 +562,13 @@ if SERVER then
 			local ACEnt = ents.GetByIndex(PathP[1])
 			local ACName = string.format("%s%s", "ac2_", tostring(PathP[1]))
 
+			PrintTable(ACEnt:GetTable().ActorSettings)
+
 			if IsValid( ACEnt:GetTable().ActorSettings.ActorEnt ) and ACEnt:GetTable().ActorSettings.ActorEnt:GetName() == ACName then
 				ACEnt:GetTable().ActorSettings.ActorEnt:Remove()
+				numpad.Remove( ACEnt:GetTable().ActorSettings.npzAcSpawn )
+				numpad.Remove( ACEnt:GetTable().ActorSettings.npzAcDeSpawn )
+
 				CreateActorSpawn( ply, ACEnt:GetPos(), ACEnt:GetAngles(), ACEnt:GetTable().ActorSettings, PathP[1] )
 				FaceLastPathPoint( PathP )
 			else
@@ -575,32 +585,40 @@ if SERVER then
 		npz:SetName( "ac2_"..id )
 		npz:SetPos( pos )
 		npz:SetAngles( angs )
+
 		t.ActorEnt = npz
-		local npzAcSpawn = numpad.OnDown(ply, t.SKey, "ActorSpawn", npz, pos, 0)
-		local npzAcDeSpawn = numpad.OnDown(ply, t.DSKey, "ActorDeSpawn", npz)
+		t.npzAcSpawn = numpad.OnDown(ply, t.SKey, "ActorSpawn", npz, pos, 0)
+		t.npzAcDeSpawn = numpad.OnDown(ply, t.DSKey, "ActorDeSpawn", npz)
 	end
 
-	function SpawnActor(ply, ent, pos, delay, t)
-		if(IsValid(ent)) then
-			local posz = string.Explode(" ", tostring(pos))
-			delay = delay or 0
-			timer.Simple( delay, function()
-				ent:SetPos(Vector( posz[1], posz[2], posz[3] ) )
-				ent:Spawn()
-				ent:Activate()
-			end)
+	local function SpawnActor(ply, ent, pos, delay, t)
+		if not IsValid( ent ) then return false end
+
+		local posz = string.Explode(" ", tostring(pos))
+		delay = delay or 0
+		timer.Simple( delay, function()
+			ent:SetPos(Vector( posz[1], posz[2], posz[3] ) )
+			ent:Spawn()
+			ent:Activate()
+		end)
+	end
+
+	local PTwice = 1
+	local function DeSpawnActor(ply, ent)
+		if not IsValid( ent ) then return false end
+
+		if PTwice == 1 then
+			CheckActorSpawn( ply )
+			PTwice = 0
 		end
+		timer.Simple(1, function() PTwice = 1 end)
 	end
 
-	function DeSpawnActor(ply, ent)
-		print("despawn called")
-		if(IsValid(ent)) then
-			ent:Remove()
-		end
-	end
-
-	numpad.Register("ActorSpawn", SpawnActor)
-	numpad.Register("ActorDeSpawn", DeSpawnActor)
+	numpad.Register("ActorSpawn", function( pl, ent )
+		if not IsValid(ent) then return false end
+		SpawnActor()
+	end)
+	numpad.Register("ActorDeSpawn", DeSpawnActor )
 end
 
 -- ## ----------------------------------- Actors2 ---------------------------------- ## --

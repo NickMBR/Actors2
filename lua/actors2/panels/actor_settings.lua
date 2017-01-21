@@ -154,10 +154,6 @@ mdl:SetAnimated( true )
 mdl.Angles = Angle( 0, 0, 0 )
 mdl:SetLookAt( Vector( -120, 0, -22 ) )
 
--- Sets the entity to Draw
-mdl:SetModel( "models/alyx.mdl" )
-mdl.Entity:SetPos( Vector( -120, 0, -55 ) )
-
 -- Rotates the entity with the mouse
 function mdl:DragMousePress()
     self.PressX, self.PressY = gui.MousePos()
@@ -255,8 +251,25 @@ if IsValid(ModelListBase) then
     fadePanelAlpha( "human" )
 end
 
+local function UpdateFromConvars()
+    -- Sets the entity to Draw
+    local modelz = GetConVar( "actors2_pathmaker_ac2_model" )
+    mdl:SetModel( modelz:GetString() )
+    mdl.Entity:SetPos( Vector( -120, 0, -55 ) )
+end
+
+function MdlSelect:OnActivePanelChanged( old, new )
+    --[[if ( old != new ) then
+        RunConsoleCommand( "nmactors_ac_bodygroup", "0" )
+        RunConsoleCommand( "nmactors_ac_skin", "0" )
+    end	]]--
+    timer.Simple( 0.1, function() UpdateFromConvars() end )
+
+end
+
 -- Opens It!
 Base:MakePopup()
+UpdateFromConvars()
 
 end -- End OpenPanel function
 
@@ -273,7 +286,7 @@ function CreateModelList( mdl_list )
         icon:SetSize( 64, 64 )
         icon:SetTooltip( name )
 
-        MdlSelect:AddPanel( icon, { nmactors_ac_model = model } )
+        MdlSelect:AddPanel( icon, { actors2_pathmaker_ac2_model = model } )
             
     end
 end
