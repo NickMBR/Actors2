@@ -41,6 +41,7 @@ AC2_LANG = {
 		["ac2_panelset_btnhelp"]			= "Help",
 		["ac2_panelset_filterby"]			= "Filter By:",
 		["ac2_panelset_search"]				= "Search...",
+		["ac2_panelset_inputcustom"]		= "Model Path:",
 	},
 	["pt-BR"] = {
 		-- Ferramenta de Trajeto
@@ -80,6 +81,7 @@ AC2_LANG = {
 		["ac2_panelset_btnhelp"]			= "Ajuda",
 		["ac2_panelset_filterby"]			= "Filtrar por:",
 		["ac2_panelset_search"]				= "Pesquisar...",
+		["ac2_panelset_inputcustom"]		= "Caminho do Modelo:",
 	}
 }
 

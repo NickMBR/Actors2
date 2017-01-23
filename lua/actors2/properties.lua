@@ -17,17 +17,7 @@ properties.Add( "ac2_p_editactor", {
 		return false
 	end,
 	Action = function( self, ent )
-
-		self:MsgStart()
-			net.WriteEntity( ent )
-		self:MsgEnd()
-		print("opened actor settings on Action")
-		OpenActorSettingsPanel()
-
-	end,
-	Receive = function( self, length, player )
-		local ent = net.ReadEntity()
-		if ( !self:Filter( ent, player ) ) then return end
+		OpenActorSettingsPanel( ent )
 	end
 } )
 
@@ -51,12 +41,9 @@ properties.Add( "ac2_p_editpathpoint", {
 		return false
 	end,
 	Action = function( self, ent )
-
 		self:MsgStart()
 			net.WriteEntity( ent )
 		self:MsgEnd()
-		print("opened path settings on Action")
-
 	end,
 	Receive = function( self, length, player )
 		local ent = net.ReadEntity()

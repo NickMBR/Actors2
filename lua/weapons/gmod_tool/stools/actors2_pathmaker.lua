@@ -27,9 +27,6 @@ TOOL.ClientConVar =
 	-- Spawn/Remove Keys
 	[ "ac2_spawn" ]	= "52",
 	[ "ac2_despawn" ]	= "51",
-
-	-- Actor Settings Panel
-	[ "ac2_model" ] = "models/alyx.mdl"
 }
 
 -- ## ----------------------------------- Actors2 ---------------------------------- ## --
@@ -517,19 +514,19 @@ end
 	-- Server Functions
 -- ## ------------------------------------------------------------------------------ ## --
 if SERVER then
+	util.AddNetworkString( "Ac2_OpenWelcomePanel" )
+	util.AddNetworkString( "Ac2_FetchVersion" )
+	util.AddNetworkString( "Ac2_OpenActorPanel" )
 	util.AddNetworkString( "SendActorPoints" )
 	util.AddNetworkString( "DrawPathPointLine" )
 	util.AddNetworkString( "NotifyPathPointRMV" )
 	util.AddNetworkString( "CheckNavMesh" )
-	util.AddNetworkString( "Ac2_OpenWelcomePanel" )
-	util.AddNetworkString( "Ac2_FetchVersion" )
-	util.AddNetworkString( "Ac2_OpenActorPanel" )
 
 	function CreatePathPoint( ply, pos )
 		pathpnt = ents.Create( "ac2_pathpoint" )
 		if not IsValid( pathpnt ) then return end
 		
-		pathpnt:SetPlayer( ply )
+		pathpnt:SetOwner( ply )
 		pathpnt:SetPos( pos )
 		pathpnt:Spawn()
 	end
@@ -581,6 +578,7 @@ if SERVER then
 		npz:SetName( "ac2_"..id )
 		npz:SetPos( pos )
 		npz:SetAngles( angs )
+		npz:SetOwner( ply )
 
 		t.ActorEnt = npz
 		t.npzAcSpawn = numpad.OnDown(ply, t.SKey, "ActorSpawn", npz, pos, 0)

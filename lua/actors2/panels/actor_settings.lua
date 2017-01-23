@@ -20,12 +20,15 @@ surface.CreateFont( "AC2_F20", {
 -- ## ----------------------------------- Actors2 ---------------------------------- ## --
 -- Variables
 -- ## ------------------------------------------------------------------------------ ## --
-local RedBtnHover, RedBtnTextHover, WhiteBtnHover, WhiteBtnTextHover, BlueBtnHover, BlueBtnTextHover = Color( 35, 35, 35, 255 )
+local RedBtnHover, RedBtnTextHover, WhiteBtnHover, WhiteBtnTextHover, BlueBtnHover, BlueBtnTextHover, GreenBtnHover, GreenBtnTextHover = Color( 35, 35, 35, 255 )
+local ActorSettings = {}
 
 -- ## ----------------------------------- Actors2 ---------------------------------- ## --
 -- Open the Panel
 -- ## ------------------------------------------------------------------------------ ## --
-function OpenActorSettingsPanel()
+function OpenActorSettingsPanel( pathp )
+
+ActorSettings.Model = ActorSettings.Model or "models/alyx.mdl"
 
 -- ## ----------------------------------- Actors2 ---------------------------------- ## --
 -- Hover Functions
@@ -41,6 +44,9 @@ function ButtonHover( btn, class )
         elseif class == "blue" then
             BlueBtnHover = Color( 55, 100, 180, 255 )
             BlueBtnTextHover = Color( 210, 210, 210, 255 )
+        elseif class == "green" then
+            GreenBtnHover = Color( 55, 180, 70, 255 )
+            GreenBtnTextHover = Color( 210, 210, 210, 255 )
         end
     else
         if class == "red" then
@@ -52,6 +58,9 @@ function ButtonHover( btn, class )
         elseif class == "blue" then
             BlueBtnHover = Color( 75, 120, 200, 255 )
             BlueBtnTextHover = Color( 210, 210, 210, 255 )
+        elseif class == "green" then
+            GreenBtnHover = Color( 75, 200, 90, 255 )
+            GreenBtnTextHover = Color( 210, 210, 210, 255 )
         end
     end
 end
@@ -61,10 +70,10 @@ end
 -- ## ------------------------------------------------------------------------------ ## --
 function UpdateFromConvars()
     -- Sets the entity to Draw
-    local modelz = GetConVar( "actors2_pathmaker_ac2_model" )
 
     if IsValid( mdl ) then
-        mdl:SetModel( modelz:GetString() )
+        ListCustom:SetText( ActorSettings.Model )
+        mdl:SetModel( ActorSettings.Model )
         mdl.Entity:SetPos( Vector( -120, 0, -55 ) )
 
         if mdl.Entity:GetModelRadius() > 80 or mdl.Entity:GetModelRadius() < 72 then
@@ -90,15 +99,13 @@ function CreateModelList( mdl_list )
         icon:SetSize( 64, 64 )
         icon:SetTooltip( name )
 
-        MdlSelect:AddPanel( icon, { actors2_pathmaker_ac2_model = model } )
-    end
+        MdlSelect:AddPanel( icon )
 
-    function MdlSelect:OnActivePanelChanged( old, new )
-        --[[if ( old != new ) then
-            RunConsoleCommand( "nmactors_ac_bodygroup", "0" )
-            RunConsoleCommand( "nmactors_ac_skin", "0" )
-        end	]]--
-        timer.Simple( 0.1, function() UpdateFromConvars() end )
+        -- When clicked, update the model
+        icon.DoClick = function()
+            ActorSettings.Model = model
+            UpdateFromConvars()
+        end
     end
 end
 
@@ -125,8 +132,6 @@ function fadePanelAlpha( str, search_str )
         elseif str == "plymodels" then
             CreateModelList( PlyModelsList )
         elseif str == "search" then
-            print("search was: "..search_str)
-
             for k, v in SortedPairs( SearchTable ) do
                 if string.find( v, search_str, 0, true ) or string.find( k, search_str, 0, true ) then
                      table.insert(ResultList, v)
@@ -243,7 +248,7 @@ end
 -- Actor List - Buttons Container
 -- ## ------------------------------------------------------------------------------ ## --
 local ButtonListBase = vgui.Create( "DPanel", Base )
-ButtonListBase:SetPos( ( Base:GetWide()-Base:GetWide()/2 )-100, 45 )
+ButtonListBase:SetPos( ( Base:GetWide()-Base:GetWide()/2 )-100, 35 )
 ButtonListBase:SetSize( Base:GetWide()/2+90, 80 )
 ButtonListBase:SetPaintBackground( false )
 
@@ -252,13 +257,16 @@ ButtonListBase.Paint = function()
     surface.SetFont( "AC2_F20" )
     surface.SetTextPos( 0, 5 )
 	surface.DrawText( AC2_LANG[A2LANG]["ac2_panelset_filterby"] )
+
+    surface.SetTextPos( 375, 5 )
+	surface.DrawText( AC2_LANG[A2LANG]["ac2_panelset_inputcustom"] )
 end
 
 -- Npcs Models Button
 local ListBtnMain = vgui.Create( "DButton", ButtonListBase )
 ListBtnMain:SetPos( 0, 30 )
 ListBtnMain:SetText( "" )
-ListBtnMain:SetSize( 100, 30 )
+ListBtnMain:SetSize( 60, 30 )
 ListBtnMain.DoClick = function()
 	fadePanelAlpha( "npcs", "" )
 end
@@ -267,12 +275,12 @@ ListBtnMain.Paint = function()
     surface.SetDrawColor( BlueBtnHover )
     surface.DrawRect( 0, 0, ListBtnMain:GetWide(), ListBtnMain:GetTall() )
 
-    draw.SimpleText( "NPCs", "AC2_F15", 50, 15, BlueBtnTextHover, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
+    draw.SimpleText( "NPCs", "AC2_F15", 30, 15, BlueBtnTextHover, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
 end
 
 -- Player Models Button
 local ListBtnPlyModls = vgui.Create( "DButton", ButtonListBase )
-ListBtnPlyModls:SetPos( 105, 30 )
+ListBtnPlyModls:SetPos( 65, 30 )
 ListBtnPlyModls:SetText( "" )
 ListBtnPlyModls:SetSize( 100, 30 )
 ListBtnPlyModls.DoClick = function()
@@ -288,14 +296,19 @@ end
 
 -- Search Models TextBox
 local ListSearch = vgui.Create( "DTextEntry", ButtonListBase ) -- create the form as a child of frame
-ListSearch:SetPos( 210, 30 )
+ListSearch:SetPos( 170, 30 )
 ListSearch:SetSize( 200, 30 )
 ListSearch:SetText( AC2_LANG[A2LANG]["ac2_panelset_search"] )
 ListSearch:SetFont( "AC2_F15" )
+ListSearch:SetUpdateOnType( true )
 ListSearch.OnEnter = function( self )
     if self:GetValue() != "" then
 	    fadePanelAlpha( "search", self:GetValue() )
     end
+end
+
+ListSearch.OnValueChange = function ( self )
+	fadePanelAlpha( "search", self:GetValue() )
 end
 
 ListSearch.OnGetFocus = function( self )
@@ -304,28 +317,72 @@ ListSearch.OnGetFocus = function( self )
     end
 end
 
-ListSearch.OnLoseFocus = function( self )
-    self:SetText( AC2_LANG[A2LANG]["ac2_panelset_search"] )
-end
-
 ListSearch.Paint = function( self )
+    ButtonHover( ListSearch, "blue" )
 	surface.SetDrawColor( BlueBtnHover )
     surface.DrawRect( 0, 0, ListSearch:GetWide(), ListSearch:GetTall() )
 
     self:DrawTextEntryText( Color(210,210,210), Color(35,35,35), Color(210,210,210) )
 end
 
+-- Custom Model TextBox
+ListCustom = vgui.Create( "DTextEntry", ButtonListBase ) -- create the form as a child of frame
+ListCustom:SetPos( 375, 30 )
+ListCustom:SetSize( 370, 30 )
+ListCustom:SetText( ActorSettings.Model )
+ListCustom:SetFont( "AC2_F15" )
+ListCustom.OnEnter = function( self )
+    if self:GetValue() != "" then
+	    ActorSettings.Model = self:GetValue()
+        UpdateFromConvars()
+    end
+end
+
+ListCustom.Paint = function( self )
+    ButtonHover( ListCustom, "blue" )
+	surface.SetDrawColor( BlueBtnHover )
+    surface.DrawRect( 0, 0, ListCustom:GetWide(), ListCustom:GetTall() )
+
+    self:DrawTextEntryText( Color(210,210,210), Color(35,35,35), Color(210,210,210) )
+end
+
+-- Next Button
+-- Npcs Models Button
+local ListBtnNext = vgui.Create( "DButton", ButtonListBase )
+ListBtnNext:SetPos( 750, 30 )
+ListBtnNext:SetText( "" )
+ListBtnNext:SetSize( 150, 30 )
+ListBtnNext.DoClick = function()
+	chat.AddText("next")
+end
+ListBtnNext.Paint = function()
+    ButtonHover( ListBtnNext, "green" )
+    surface.SetDrawColor( GreenBtnHover )
+    surface.DrawRect( 0, 0, ListBtnNext:GetWide(), ListBtnNext:GetTall() )
+
+    draw.SimpleText( "Next", "AC2_F15", 72.5, 15, GreenBtnTextHover, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
+end
+
 -- ## ----------------------------------- Actors2 ---------------------------------- ## --
 -- Makes the model list container
 -- ## ------------------------------------------------------------------------------ ## --
 ModelListBase = vgui.Create( "DPanel", Base )
-ModelListBase:SetPos( ( Base:GetWide()-Base:GetWide()/2 )-100, 110 )
+ModelListBase:SetPos( ( Base:GetWide()-Base:GetWide()/2 )-100, 105 )
 ModelListBase:SetSize( Base:GetWide()/2+90, Base:GetTall()-120 )
 ModelListBase:SetPaintBackground( false )
 
 if IsValid(ModelListBase) then 
     fadePanelAlpha( "npcs", "" )
 end
+
+-- ## ----------------------------------- Actors2 ---------------------------------- ## --
+-- The bodygroup base container
+-- ## ------------------------------------------------------------------------------ ## --
+BodygroupBase = vgui.Create( "DPanel", Base )
+BodygroupBase:SetPos( 10, 40 )
+BodygroupBase:SetSize( Base:GetWide()/8, Base:GetTall()-50 )
+BodygroupBase:SetPaintBackground( true )
+
 
 -- Opens It!
 Base:MakePopup()
