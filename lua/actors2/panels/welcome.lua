@@ -14,17 +14,19 @@ local function OpenWelcomePanel()
 	-- To avoid a bug where the base panel becomes invalid
 	-- the HTML panel needs to be parented with a DFrame
 	-- in case of the bug, you can still close it.
-	Wlc_Base = vgui.Create( "DFrame" )
+	--[[Wlc_Base = vgui.Create( "DFrame" )
 	Wlc_Base:SetSize( ScrW()/1.5, ScrH()/1.5 )
 	Wlc_Base:Center()
 	Wlc_Base:SetDraggable( false )
 	Wlc_Base:SetSizable( false )
 	Wlc_Base:SetTitle( "" )
-	Wlc_Base:InvalidateLayout()
+	Wlc_Base:InvalidateLayout()]]--
 
 	-- Creates the HTML Panel parented to the Base DPanel
-	Wlc = vgui.Create( "DHTML", Wlc_Base )
-	Wlc:Dock( FILL )
+	Wlc = vgui.Create( "DHTML" )
+	--Wlc:Dock( FILL )
+	Wlc:SetSize( ScrW()/1.5, ScrH()/1.5 )
+	Wlc:Center()
 	Wlc:SetAllowLua( true )
 	Wlc:OpenURL( "asset://garrysmod/html/welcome.html" )
 
@@ -32,12 +34,12 @@ local function OpenWelcomePanel()
 		print( str )
 	end )]]--
 
-	if Wlc_Base:IsValid() then
+	if Wlc:IsValid() then
 		Wlc:QueueJavascript( "receiveLang( '" .. A2LANG .. "' )" )
 		Wlc:QueueJavascript( "getWelcomeState( " .. WelcomeState .. " )" )
 	end
 
-	Wlc_Base:MakePopup()
+	Wlc:MakePopup()
 end
 
 function SendAddonCheckings()
@@ -68,8 +70,8 @@ end )
 -- Functions called from the JS environment
 -- ## ------------------------------------------------------------------------------ ## --
 function CloseWelcomePanel()
-	if Wlc_Base:IsValid() then
-		Wlc_Base:Remove()
+	if Wlc:IsValid() then
+		Wlc:Remove()
 	end
 end
 

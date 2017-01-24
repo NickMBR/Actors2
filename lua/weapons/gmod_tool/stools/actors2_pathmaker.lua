@@ -89,7 +89,7 @@ if ( CLIENT ) then
 	language.Add("tool.actors2_pathmaker.shift_reload", AC2_LANG[A2LANG]["ac2_tool_pm_shiftreload"])
 	
 	-- Tool Descriptions
-	language.Add("tool.actors2_pathmaker.name", AC2_LANG[A2LANG]["ac2_tool_category"])
+	language.Add("tool.actors2_pathmaker.name", AC2_LANG[A2LANG]["ac2_tool_category"].." - "..AC2_LANG[A2LANG]["ac2_tool_pathmaker"])
 	language.Add("tool.actors2_pathmaker.desc", AC2_LANG[A2LANG]["ac2_tool_pm_desc"])
 	language.Add("tool.actors2_pathmaker.0", AC2_LANG[A2LANG]["ac2_tool_pm_info"])
 
@@ -283,7 +283,7 @@ function TOOL:Reload( trace )
 			else
 				if PathCount > 1 then PathCount = PathCount - 1 else PathCount = PathSelector end
 				SendNewPathPointTable( ply )
-				CheckActorSpawn( ply )
+				--CheckActorSpawn( ply )
 			end
 		end
 	else
@@ -552,7 +552,7 @@ if SERVER then
 	function CheckActorSpawn( ply )
 		local PathPTBL = GetActorPointsTBL( ply )
 
-		if PathPTBL and #PathPTBL[PathCount] >= 1 then
+		if PathPTBL and #PathPTBL[PathCount] > 0 then
 			local PathP = PathPTBL[PathCount]
 			local ACEnt = ents.GetByIndex(PathP[1])
 			local ACName = string.format("%s%s", "ac2_", tostring(PathP[1]))
@@ -562,11 +562,12 @@ if SERVER then
 				numpad.Remove( ACEnt:GetTable().ActorSettings.npzAcSpawn )
 				numpad.Remove( ACEnt:GetTable().ActorSettings.npzAcDeSpawn )
 
-				CreateActorSpawn( ply, ACEnt:GetPos(), ACEnt:GetAngles(), ACEnt:GetTable().ActorSettings, PathP[1] )
 				FaceLastPathPoint( PathP )
+				CreateActorSpawn( ply, ACEnt:GetPos(), ACEnt:GetAngles(), ACEnt:GetTable().ActorSettings, PathP[1] )
+				
 			else
-				CreateActorSpawn( ply, ACEnt:GetPos(), ACEnt:GetAngles(), ACEnt:GetTable().ActorSettings, PathP[1] )
 				FaceLastPathPoint( PathP )
+				CreateActorSpawn( ply, ACEnt:GetPos(), ACEnt:GetAngles(), ACEnt:GetTable().ActorSettings, PathP[1] )
 			end
 		end
 	end
