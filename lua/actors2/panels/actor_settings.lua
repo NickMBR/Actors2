@@ -33,6 +33,7 @@ function OpenActorSettingsPanel( pathp )
 -- ## ------------------------------------------------------------------------------ ## --
 ActorSettings.Model = ActorSettings.Model or "models/alyx.mdl"
 ActorSettings.Skin = ActorSettings.Skin or 0
+ActorSettings.Bodygroup = ActorSettings.Bodygroup or "0"
 
 -- ## ----------------------------------- Actors2 ---------------------------------- ## --
 -- Hover Functions
@@ -81,6 +82,12 @@ function UpdateFromConvars()
         ListCustom:SetText( ActorSettings.Model )
         mdl:SetModel( ActorSettings.Model )
         mdl.Entity:SetPos( Vector( -120, 0, -55 ) )
+        mdl.Entity:SetSkin( ActorSettings.Skin )
+
+        RebuildBodygroupTab()
+
+        local ac_bgroups = string.Replace(ActorSettings.Bodygroup, " ", "")
+        mdl.Entity:SetBodyGroups(ac_bgroups)
 
         if mdl.Entity:GetModelRadius() > 80 or mdl.Entity:GetModelRadius() < 72 then
             mdl:SetLookAt( Vector( -200, 0, -22 ) )
@@ -110,6 +117,9 @@ function CreateModelList( mdl_list )
         -- When clicked, update the model
         icon.DoClick = function()
             ActorSettings.Model = model
+            ActorSettings.Skin = 0
+            ActorSettings.Bodygroup = "0"
+
             UpdateFromConvars()
             RebuildBodygroupTab()
         end
@@ -122,8 +132,6 @@ end
 -- ## ------------------------------------------------------------------------------ ## --
 local HC_ModelList = list.Get( "Def_NPCList" )
 local NPC_NiceList = list.Get( "FormatedNPCList" )
-local npc_list = table.Merge( NPC_NiceList, HC_ModelList )
-
 local PlyModelsList = player_manager.AllValidModels()
 
 function fadePanelAlpha( str, search_str )
@@ -133,6 +141,7 @@ function fadePanelAlpha( str, search_str )
         ModelListBase:AlphaTo( 255, 1, 0 )
 
         if str == "npcs" then
+            local npc_list = table.Merge( NPC_NiceList, HC_ModelList )
             CreateModelList( npc_list )
         end
         if str == "plymodels" then
@@ -351,6 +360,7 @@ ListCustom.OnEnter = function( self )
     if self:GetValue() != "" then
 	    ActorSettings.Model = self:GetValue()
         UpdateFromConvars()
+        RebuildBodygroupTab()
     end
 end
 
@@ -409,20 +419,20 @@ end
 Page2Container = vgui.Create( "DPanel", Base )
 Page2Container:SetPos( ( Base:GetWide()-Base:GetWide()/2 )-100, 30 )
 Page2Container:SetSize( Base:GetWide()/2+90, Base:GetTall()-40 )
-Page2Container:SetPaintBackground( false )
+Page2Container:SetPaintBackground( true )
 
+-- ## ----------------------------------- Actors2 ---------------------------------- ## --
+-- Page 2 Buttons
+-- ## ------------------------------------------------------------------------------ ## --
 local P2_BtnContainer = vgui.Create( "DPanel", Page2Container )
 P2_BtnContainer:SetSize( Page2Container:GetWide()/2+90, 50 )
 P2_BtnContainer:Dock( TOP )
-P2_BtnContainer:SetPaintBackground( false )
+P2_BtnContainer:SetPaintBackground( true )
+P2_BtnContainer:SetBackgroundColor( Color( 170, 170, 170, 255) )
 
--- ## ----------------------------------- Actors2 ---------------------------------- ## --
--- Go Back to Page 1 Button
--- ## ------------------------------------------------------------------------------ ## --
--- Next Button
--- Npcs Models Button
+-- Back Button
 local ListBtnBack = vgui.Create( "DButton", P2_BtnContainer )
-ListBtnBack:SetPos( 10, 10 )
+ListBtnBack:SetPos( 0, 10 )
 ListBtnBack:SetText( "" )
 ListBtnBack:SetSize( 80, 30 )
 ListBtnBack.DoClick = function()
@@ -450,70 +460,154 @@ ListBtnBack.Paint = function()
 end
 
 -- ## ----------------------------------- Actors2 ---------------------------------- ## --
--- Page 2 Panels Container
--- ## ------------------------------------------------------------------------------ ## --
-local P2_PnlContainer = vgui.Create( "DPanel", Page2Container )
-P2_PnlContainer:SetSize( Page2Container:GetWide(), Page2Container:GetTall() )
-P2_PnlContainer:Dock( TOP )
-P2_PnlContainer:SetPaintBackground( true )
-P2_PnlContainer:SetBackgroundColor( Color(120,120,120,255) )
-
--- ## ----------------------------------- Actors2 ---------------------------------- ## --
 -- The bodygroup base container
 -- ## ------------------------------------------------------------------------------ ## --
-BodygroupBase = vgui.Create( "DPanel", Page2Container )
-BodygroupBase:SetPos( 10, 40 )
-BodygroupBase:SetSize( Base:GetWide()/10, Base:GetTall()-50 )
+local BodygroupBase = vgui.Create( "DScrollPanel", ModelBase )
+BodygroupBase:SetSize( ModelBase:GetWide()/4, ModelBase:GetTall())
+BodygroupBase:SetPos( 0, 0 )
 BodygroupBase:SetPaintBackground( false )
+
+BodygroupBase.Paint = function()
+    surface.SetDrawColor( Color( 60, 60, 60, 255) )
+    surface.DrawRect( 0, 0, BodygroupBase:GetWide()-50, BodygroupBase:GetTall() )
+end
+
 BodygroupBase:SetVisible( false )
 
-local BodygroupControls = vgui.Create( "DPanelList", BodygroupBase)
-BodygroupControls:EnableVerticalScrollbar( true )
-BodygroupControls:Dock( FILL )
+-- ## ----------------------------------- Actors2 ---------------------------------- ## --
+-- Skins and Bodygroups sliders
+-- ## ------------------------------------------------------------------------------ ## --
+local function MakeNiceName( str )
+    local newname = {}
+    for _, s in pairs( string.Explode( "_", str ) ) do
+        if ( string.len( s ) == 1 ) then table.insert( newname, string.upper( s ) ) continue end
+        table.insert( newname, string.upper( string.Left( s, 1 ) ) .. string.Right( s, string.len( s ) - 1 ) ) -- Ugly way to capitalize first letters.
+    end
+
+    return string.Implode( " ", newname )
+end
+
+local function UpdateBodyGroups( pnl, val )
+    mdl.Entity:SetBodygroup( pnl.typenum, math.Round( val ) )
+
+    local str = string.Explode( " ", ActorSettings.Bodygroup )
+    if ( #str < pnl.typenum + 1 ) then for i = 1, pnl.typenum + 1 do str[ i ] = str[ i ] or 0 end end
+    str[ pnl.typenum + 1 ] = math.Round( val )
+    ActorSettings.Bodygroup = table.concat( str, " " )
+end
 
 function RebuildBodygroupTab()
-    BodygroupControls:Clear()
+    BodygroupBase:Clear()
+    BodygroupBase:SetVisible( false )
 
-    local nskins = mdl.Entity:SkinCount() - 1
-    if ( nskins > 0 ) then
-        local skins = vgui.Create( "DNumSlider", BodygroupBase )
-        skins:Dock( TOP )
-        skins:SetPos( 10,5 )
-        skins:SetSize( 10, 10 )
-        skins:SetText( "" )
-        skins:SetMinMax( 0, nskins )
-        skins:SetDecimals( 0 )
-        skins:SetValue( ActorSettings.Skin )
+    local nskin = mdl.Entity:SkinCount() - 1
+    if ( nskin > 0 ) then
 
-        skins.TextArea:SetFont( 'AC2_F15' )
-	    skins.TextArea:SetTextColor( 210, 210, 210, 255 )
-
-        skins.Label:Dock( NODOCK )
-	    skins.Label:SetSize( 0, 0 )
-
-	    skins.Scratch:SetParent( skins.TextArea )
-	    skins.Scratch:Dock( RIGHT )
-
-        skins.Slider.Paint = function( self, w, h )
-            surface.SetDrawColor( 210, 210, 210, 255 )
-            surface.DrawRect( 8, h / 2 - 1, w - 15, 3 )
-        end
-        
-        skins.Slider.Knob.Paint = function( self, w, h )
-            local size = w / 2
-            surface.SetDrawColor( 75, 120, 200, 255 )
-            surface.DrawRect( w / 2 - size / 2, 0, size, h )
-        end
-        
-        BodygroupControls:AddItem( skins )
+        FancyLabel( 10, 5, "Skin:", "AC2_F15", Color( 210, 210, 210, 255 ), BodygroupBase)
+        local skins = FancySlider( 10, 30, BodygroupBase:GetWide()+25, 10, BodygroupBase, 0, nskin, ActorSettings.Skin, "", 0)
 
         skins.OnValueChanged = function( self )
             ActorSettings.Skin = math.Round( self:GetValue() )
             mdl.Entity:SetSkin( ActorSettings.Skin )
         end
-        
+
         BodygroupBase:SetVisible( true )
     end
+
+    local groups = string.Explode( " ", ActorSettings.Bodygroup )
+    for k = 0, mdl.Entity:GetNumBodyGroups() - 1 do
+        if ( mdl.Entity:GetBodygroupCount( k ) <= 1 ) then continue end
+
+        FancyLabel( 10, 25*(k+1), MakeNiceName( mdl.Entity:GetBodygroupName( k ) )..":", "AC2_F15", Color( 210, 210, 210, 255 ), BodygroupBase)
+        local bgroup = FancySlider( 10, 38*(k+1), BodygroupBase:GetWide()+25, 10, BodygroupBase, 0, mdl.Entity:GetBodygroupCount( k ) - 1, groups[ k + 1 ] or 0, "bgroup", k)
+        bgroup.OnValueChanged = UpdateBodyGroups
+
+        BodygroupBase:SetVisible( true )
+    end
+end
+
+-- ## ----------------------------------- Actors2 ---------------------------------- ## --
+-- Fancy Toggleable Buttons
+-- ## ------------------------------------------------------------------------------ ## --
+function draw.OutlinedBox( x, y, w, h, thickness, clr )
+	surface.SetDrawColor( clr )
+	for i=0, thickness - 1 do
+		surface.DrawOutlinedRect( x + i, y + i, w - i * 2, h - i * 2 )
+	end
+end
+
+-- Test Button
+local TogVar = 0
+local TestToggleBtn = vgui.Create( "DButton", Page2Container )
+TestToggleBtn:SetPos( 200, 50 )
+TestToggleBtn:SetText( "" )
+TestToggleBtn:SetSize( 50, 20 )
+TestToggleBtn.DoClick = function( self )
+    if TogVar != 1 then TogVar = 1 else TogVar = 0 end
+end
+TestToggleBtn.Paint = function( self, w, h )
+    if TogVar == 0 then
+        surface.SetDrawColor( 200, 90, 75, 255 )
+        surface.DrawRect( 0, 0, TestToggleBtn:GetWide()/2, TestToggleBtn:GetTall() )
+    else
+        surface.SetDrawColor( 75, 200, 90, 255 )
+        surface.DrawRect( TestToggleBtn:GetWide()/2, 0, TestToggleBtn:GetWide()/2, TestToggleBtn:GetTall() )
+    end
+    draw.OutlinedBox( 0, 0, TestToggleBtn:GetWide(), TestToggleBtn:GetTall(), 2, Color(80, 80, 80, 255))
+end
+
+-- ## ----------------------------------- Actors2 ---------------------------------- ## --
+-- Fancy Label
+-- ## ------------------------------------------------------------------------------ ## --
+function FancyLabel( x, y, text, font, col, parent)
+    local fancy_label = vgui.Create( "DLabel", parent )
+    fancy_label:SetPos( x, y )
+    fancy_label:Dock( TOP )
+    fancy_label:DockMargin( 5, 5, 5, 0 )
+    fancy_label:SetText( text )
+    fancy_label:SetFont( font )
+    fancy_label:SetTextColor( col )
+    fancy_label:SizeToContents()
+end
+
+-- ## ----------------------------------- Actors2 ---------------------------------- ## --
+-- Fancy Slider
+-- ## ------------------------------------------------------------------------------ ## --
+function FancySlider( x, y, w, h, parent, min, max, val, typ, typnum)
+    local fancy_slider = vgui.Create( "DNumSlider", parent )
+    fancy_slider:SetSize( w, h )
+    fancy_slider:Dock( TOP )
+    fancy_slider:DockMargin( 5, 5, 5, 5 )
+    fancy_slider:SetPos( x, y )
+    fancy_slider:SetText( "" )
+    fancy_slider:SetMinMax( min, max )
+    fancy_slider:SetDecimals( 0 )
+    fancy_slider:SetDark( false )
+    fancy_slider:SetValue( val )
+
+    fancy_slider.type = typ
+	fancy_slider.typenum = typnum
+
+    fancy_slider.TextArea:SetFont( 'AC2_F15' )
+    fancy_slider.TextArea:SetTextColor( 210, 210, 210, 255 )
+
+    fancy_slider.Label:Dock( NODOCK )
+    fancy_slider.Label:SetSize( 0, 0 )
+
+    fancy_slider.Scratch:SetParent( fancy_slider.TextArea )
+    fancy_slider.Scratch:Dock( RIGHT )
+
+    fancy_slider.Slider.Paint = function( self, w, h )
+        surface.SetDrawColor( 210, 210, 210, 255 )
+        surface.DrawRect( 3, 3, w-10, h-8 )
+    end
+
+    fancy_slider.Slider.Knob.Paint = function( self, w, h )
+        surface.SetDrawColor( 75, 120, 200, 255 )
+        surface.DrawRect( 0, -2, w-7, h )
+    end
+
+    return fancy_slider
 end
 
 

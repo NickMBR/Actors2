@@ -20,6 +20,7 @@ TOOL.ClientConVar =
 {
 	-- Actors2
 	[ "ac2_welcome" ] = 1,
+	[ "ac2_lang" ] = A2LANG,
 
 	-- Selection
 	[ "ac2_pathselector" ] = 1,
@@ -111,16 +112,16 @@ function TOOL:CheckAddonTest()
 
 	local function AC2GitCheck( contents, size )
 		if not navmesh.IsLoaded() then
-			CheckActors2Addon.AC2Nav = AC2_LANG[A2LANG]["ac2_welc_check_nav"]
+			CheckActors2Addon.AC2Nav = AC2_LANG[GetConVar("actors2_pathmaker_ac2_lang"):GetString()]["ac2_welc_check_nav"]
 		end
 
 		local vrs = tonumber( contents, 10 )
 		if vrs then
 			if tonumber(AC2_Version, 10) < vrs then
-				CheckActors2Addon.AC2Version = AC2_LANG[A2LANG]["ac2_welc_check_version"]
+				CheckActors2Addon.AC2Version = AC2_LANG[GetConVar("actors2_pathmaker_ac2_lang"):GetString()]["ac2_welc_check_version"]
 			end
 		elseif vrs == nil then
-			CheckActors2Addon.AC2Version = AC2_LANG[A2LANG]["ac2_welc_check_vers404"]
+			CheckActors2Addon.AC2Version = AC2_LANG[GetConVar("actors2_pathmaker_ac2_lang"):GetString()]["ac2_welc_check_vers404"]
 		end
 
 		net.Start( "Ac2_FetchVersion" )
