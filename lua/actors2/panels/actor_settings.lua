@@ -74,8 +74,9 @@ end
 -- Updates the Entity Settings
 -- ## ------------------------------------------------------------------------------ ## --
 function UpdateFromConvars()
-
-    Page2Container:AlphaTo( 0, 0.1, 0 )
+    
+    BuildPageTwo()
+    Page2Container:AlphaTo( 0, 0, 0 )
     Page2Container:SetMouseInputEnabled( false )
     -- Sets the entity to Draw
     if IsValid( mdl ) then
@@ -414,52 +415,6 @@ if IsValid(ModelListBase) then
 end
 
 -- ## ----------------------------------- Actors2 ---------------------------------- ## --
--- Makes Page 2 container
--- ## ------------------------------------------------------------------------------ ## --
-Page2Container = vgui.Create( "DPanel", Base )
-Page2Container:SetPos( ( Base:GetWide()-Base:GetWide()/2 )-100, 30 )
-Page2Container:SetSize( Base:GetWide()/2+90, Base:GetTall()-40 )
-Page2Container:SetPaintBackground( true )
-
--- ## ----------------------------------- Actors2 ---------------------------------- ## --
--- Page 2 Buttons
--- ## ------------------------------------------------------------------------------ ## --
-local P2_BtnContainer = vgui.Create( "DPanel", Page2Container )
-P2_BtnContainer:SetSize( Page2Container:GetWide()/2+90, 50 )
-P2_BtnContainer:Dock( TOP )
-P2_BtnContainer:SetPaintBackground( true )
-P2_BtnContainer:SetBackgroundColor( Color( 170, 170, 170, 255) )
-
--- Back Button
-local ListBtnBack = vgui.Create( "DButton", P2_BtnContainer )
-ListBtnBack:SetPos( 0, 10 )
-ListBtnBack:SetText( "" )
-ListBtnBack:SetSize( 80, 30 )
-ListBtnBack.DoClick = function()
-    surface.PlaySound( "ui/csgo_ui_contract_type4.wav" )
-    timer.Simple(0.1, function() 
-        Page2Container:AlphaTo( 0, 0.5, 0 )
-        Page2Container:SetMouseInputEnabled( false )
-    end)
-
-    timer.Simple(0.5, function()
-        ButtonListBase:SetMouseInputEnabled( true )
-        ModelListBase:SetMouseInputEnabled( true )
-
-        ButtonListBase:AlphaTo( 255, 0.5, 0 )
-        ModelListBase:AlphaTo( 255, 0.5, 0 )
-        
-    end)
-end
-ListBtnBack.Paint = function()
-    ButtonHover( ListBtnBack, "red" )
-    surface.SetDrawColor( RedBtnHover )
-    surface.DrawRect( 0, 0, ListBtnBack:GetWide(), ListBtnBack:GetTall() )
-
-    draw.SimpleText( AC2_LANG[A2LANG]["ac2_panelset_btnback"], "AC2_F15", 40, 15, RedBtnTextHover, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
-end
-
--- ## ----------------------------------- Actors2 ---------------------------------- ## --
 -- The bodygroup base container
 -- ## ------------------------------------------------------------------------------ ## --
 local BodygroupBase = vgui.Create( "DScrollPanel", ModelBase )
@@ -473,6 +428,95 @@ BodygroupBase.Paint = function()
 end
 
 BodygroupBase:SetVisible( false )
+
+-- ## ----------------------------------- Actors2 ---------------------------------- ## --
+-- Page 2
+-- ## ------------------------------------------------------------------------------ ## --
+function BuildPageTwo()
+
+    -- Makes Page 2 container
+    Page2Container = vgui.Create( "DPanel", Base )
+    Page2Container:SetPos( ( Base:GetWide()-Base:GetWide()/2 )-100, 30 )
+    Page2Container:SetSize( Base:GetWide()/2+90, Base:GetTall()-40 )
+    Page2Container:SetPaintBackground( false )
+
+    -- Back Button
+    local ListBtnBack = vgui.Create( "DButton", Page2Container )
+    ListBtnBack:SetPos( 0, 10 )
+    ListBtnBack:SetText( "" )
+    ListBtnBack:SetSize( 80, 30 )
+    ListBtnBack.DoClick = function()
+        surface.PlaySound( "ui/csgo_ui_contract_type4.wav" )
+        timer.Simple(0.1, function() 
+            Page2Container:AlphaTo( 0, 0.5, 0 )
+            Page2Container:SetMouseInputEnabled( false )
+        end)
+
+        timer.Simple(0.5, function()
+            ButtonListBase:SetMouseInputEnabled( true )
+            ModelListBase:SetMouseInputEnabled( true )
+
+            ButtonListBase:AlphaTo( 255, 0.5, 0 )
+            ModelListBase:AlphaTo( 255, 0.5, 0 )
+            
+        end)
+    end
+    ListBtnBack.Paint = function()
+        ButtonHover( ListBtnBack, "red" )
+        surface.SetDrawColor( RedBtnHover )
+        surface.DrawRect( 0, 0, ListBtnBack:GetWide(), ListBtnBack:GetTall() )
+
+        draw.SimpleText( AC2_LANG[A2LANG]["ac2_panelset_btnback"], "AC2_F15", 40, 15, RedBtnTextHover, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
+    end
+
+    -- Common Base Panel
+    BtnSettingsContainer = vgui.Create( "DPanel", Page2Container )
+    BtnSettingsContainer:SetPos( 0, 60 )
+    BtnSettingsContainer:SetSize( 300, Page2Container:GetTall()-70 )
+    BtnSettingsContainer:SetPaintBackground( false )
+    BtnSettingsContainer:SetBackgroundColor( Color( 100, 100, 100, 255 ) )
+
+    FancyLabel( 0, 0, "Common Settings:", "AC2_F20", Color( 210, 210, 210, 255 ), BtnSettingsContainer, 1, 0, 0, 0, 0)
+
+    -- Toggleable Buttons (Works like checkboxes)
+    -- Actor Collision
+    local Tog = 0
+    local TogBtn = FancyToggleButton( 0, 0, 50, 20, BtnSettingsContainer, Tog, "Collisions", 1, 0, 10, 0, 0 )
+    TogBtn.DoClick = function( self )
+        if Tog != 1 then Tog = 1 else Tog = 0 end
+        FancyToggleButton_Update( TogBtn, Tog, 50, 20, "Collisions" )
+    end
+
+    local Tog = 0
+    local TogBtn = FancyToggleButton( 0, 0, 50, 20, BtnSettingsContainer, Tog, "Damage", 1, 0, 2, 0, 0 )
+    TogBtn.DoClick = function( self )
+        if Tog != 1 then Tog = 1 else Tog = 0 end
+        FancyToggleButton_Update( TogBtn, Tog, 50, 20, "Damage" )
+    end
+
+    local Tog = 0
+    local TogBtn = FancyToggleButton( 0, 0, 50, 20, BtnSettingsContainer, Tog, "Repeat", 1, 0, 2, 0, 0 )
+    TogBtn.DoClick = function( self )
+        if Tog != 1 then Tog = 1 else Tog = 0 end
+        FancyToggleButton_Update( TogBtn, Tog, 50, 20, "Repeat" )
+    end
+
+    FancyLabel( 0, 0, "Optional Settings:", "AC2_F20", Color( 210, 210, 210, 255 ), BtnSettingsContainer, 1, 0, 10, 0, 0)
+
+    local Tog = 0
+    local TogBtn = FancyToggleButton( 0, 0, 50, 20, BtnSettingsContainer, Tog, "Free Walk", 1, 0, 10, 0, 0 )
+    TogBtn.DoClick = function( self )
+        if Tog != 1 then Tog = 1 else Tog = 0 end
+        FancyToggleButton_Update( TogBtn, Tog, 50, 20, "Free Walk" )
+    end
+
+    local Tog = 0
+    local TogBtn = FancyToggleButton( 0, 0, 50, 20, BtnSettingsContainer, Tog, "Interactive", 1, 0, 2, 0, 0 )
+    TogBtn.DoClick = function( self )
+        if Tog != 1 then Tog = 1 else Tog = 0 end
+        FancyToggleButton_Update( TogBtn, Tog, 50, 20, "Interactive" )
+    end
+end
 
 -- ## ----------------------------------- Actors2 ---------------------------------- ## --
 -- Skins and Bodygroups sliders
@@ -503,7 +547,7 @@ function RebuildBodygroupTab()
     local nskin = mdl.Entity:SkinCount() - 1
     if ( nskin > 0 ) then
 
-        FancyLabel( 10, 5, "Skin:", "AC2_F15", Color( 210, 210, 210, 255 ), BodygroupBase)
+        FancyLabel( 10, 5, "Skin:", "AC2_F15", Color( 210, 210, 210, 255 ), BodygroupBase, 1, 5, 5, 5, 0)
         local skins = FancySlider( 10, 30, BodygroupBase:GetWide()+25, 10, BodygroupBase, 0, nskin, ActorSettings.Skin, "", 0)
 
         skins.OnValueChanged = function( self )
@@ -518,7 +562,7 @@ function RebuildBodygroupTab()
     for k = 0, mdl.Entity:GetNumBodyGroups() - 1 do
         if ( mdl.Entity:GetBodygroupCount( k ) <= 1 ) then continue end
 
-        FancyLabel( 10, 25*(k+1), MakeNiceName( mdl.Entity:GetBodygroupName( k ) )..":", "AC2_F15", Color( 210, 210, 210, 255 ), BodygroupBase)
+        FancyLabel( 10, 25*(k+1), MakeNiceName( mdl.Entity:GetBodygroupName( k ) )..":", "AC2_F15", Color( 210, 210, 210, 255 ), BodygroupBase, 1, 5, 5, 5, 0)
         local bgroup = FancySlider( 10, 38*(k+1), BodygroupBase:GetWide()+25, 10, BodygroupBase, 0, mdl.Entity:GetBodygroupCount( k ) - 1, groups[ k + 1 ] or 0, "bgroup", k)
         bgroup.OnValueChanged = UpdateBodyGroups
 
@@ -527,7 +571,21 @@ function RebuildBodygroupTab()
 end
 
 -- ## ----------------------------------- Actors2 ---------------------------------- ## --
--- Fancy Toggleable Buttons
+-- Fancy Label
+-- ## ------------------------------------------------------------------------------ ## --
+function FancyLabel( x, y, text, font, col, parent, should_dock, m_l, m_t, m_r, m_b)
+    local fancy_label = vgui.Create( "DLabel", parent )
+    fancy_label:SetPos( x, y )
+    if should_dock == 1 then fancy_label:Dock( TOP ) else fancy_label:Dock( NODOCK ) end
+    fancy_label:DockMargin( m_l, m_t, m_r, m_b )
+    fancy_label:SetText( text )
+    fancy_label:SetFont( font )
+    fancy_label:SetTextColor( col )
+    fancy_label:SizeToContents()
+end
+
+-- ## ----------------------------------- Actors2 ---------------------------------- ## --
+-- Fancy Toggleable Button
 -- ## ------------------------------------------------------------------------------ ## --
 function draw.OutlinedBox( x, y, w, h, thickness, clr )
 	surface.SetDrawColor( clr )
@@ -536,38 +594,49 @@ function draw.OutlinedBox( x, y, w, h, thickness, clr )
 	end
 end
 
--- Test Button
-local TogVar = 0
-local TestToggleBtn = vgui.Create( "DButton", Page2Container )
-TestToggleBtn:SetPos( 200, 50 )
-TestToggleBtn:SetText( "" )
-TestToggleBtn:SetSize( 50, 20 )
-TestToggleBtn.DoClick = function( self )
-    if TogVar != 1 then TogVar = 1 else TogVar = 0 end
-end
-TestToggleBtn.Paint = function( self, w, h )
-    if TogVar == 0 then
-        surface.SetDrawColor( 200, 90, 75, 255 )
-        surface.DrawRect( 0, 0, TestToggleBtn:GetWide()/2, TestToggleBtn:GetTall() )
-    else
-        surface.SetDrawColor( 75, 200, 90, 255 )
-        surface.DrawRect( TestToggleBtn:GetWide()/2, 0, TestToggleBtn:GetWide()/2, TestToggleBtn:GetTall() )
+function FancyToggleButton_Update( btn, togvar, wi, he, str )
+    if IsValid( btn ) then
+        btn.Paint = function( self, w, h )
+            if togvar == 0 then
+                surface.SetDrawColor( 200, 90, 75, 255 )
+                surface.DrawRect( 0, 0, wi/2, he )
+            else
+                surface.SetDrawColor( 75, 200, 90, 255 )
+                surface.DrawRect( wi/2, 0, wi/2, he )
+            end
+
+            surface.SetTextColor( 210, 210, 210, 255 )
+            surface.SetFont( "AC2_F15" )
+            surface.SetTextPos( 60, 2 )
+            surface.DrawText( str )
+
+            draw.OutlinedBox( 0, 0, wi, he, 2, Color(80, 80, 80, 255))
+        end
     end
-    draw.OutlinedBox( 0, 0, TestToggleBtn:GetWide(), TestToggleBtn:GetTall(), 2, Color(80, 80, 80, 255))
 end
 
--- ## ----------------------------------- Actors2 ---------------------------------- ## --
--- Fancy Label
--- ## ------------------------------------------------------------------------------ ## --
-function FancyLabel( x, y, text, font, col, parent)
-    local fancy_label = vgui.Create( "DLabel", parent )
-    fancy_label:SetPos( x, y )
-    fancy_label:Dock( TOP )
-    fancy_label:DockMargin( 5, 5, 5, 0 )
-    fancy_label:SetText( text )
-    fancy_label:SetFont( font )
-    fancy_label:SetTextColor( col )
-    fancy_label:SizeToContents()
+function FancyToggleButton( x, y, wi, he, parent, togvar, str, should_dock, m_l, m_t, m_r, m_b)
+    local toggle_button = vgui.Create( "DButton", parent )
+    toggle_button:SetPos( x, y )
+    toggle_button:SetText( "" )
+    toggle_button:SetSize( wi, he )
+    if should_dock == 1 then toggle_button:Dock( TOP ) else toggle_button:Dock( NODOCK ) end
+    toggle_button:DockMargin( m_l, m_t, m_r, m_b )
+
+    FancyToggleButton_Update( toggle_button, togvar, wi, he, str )
+
+    --[[toggle_button.Paint = function()
+        if togvar == 0 then
+            surface.SetDrawColor( 200, 90, 75, 255 )
+            surface.DrawRect( 0, 0, wi/2, he )
+        else
+            surface.SetDrawColor( 75, 200, 90, 255 )
+            surface.DrawRect( wi/2, 0, wi/2, he )
+        end
+        draw.OutlinedBox( 0, 0, wi, he, 2, Color(80, 80, 80, 255))
+    end]]--
+
+    return toggle_button
 end
 
 -- ## ----------------------------------- Actors2 ---------------------------------- ## --
