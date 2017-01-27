@@ -3,6 +3,13 @@ if CLIENT then
 -- ## ----------------------------------- Actors2 ---------------------------------- ## --
 -- Resources
 -- ## ------------------------------------------------------------------------------ ## --
+surface.CreateFont( "AC2_F10", {
+	font = "DermaLarge",
+	size = 12,
+	weight = 400,
+	antialias = true,
+} )
+
 surface.CreateFont( "AC2_F15", {
 	font = "DermaLarge",
 	size = 15,
@@ -143,7 +150,7 @@ function fadePanelAlpha( str, search_str )
 
         if str == "npcs" then
             local npc_list = table.Merge( NPC_NiceList, HC_ModelList )
-            CreateModelList( npc_list )
+            CreateModelList( table.Merge( NPC_NiceList, HC_ModelList ) )
         end
         if str == "plymodels" then
             CreateModelList( PlyModelsList )
@@ -196,6 +203,13 @@ BaseCloseBtn:SetPos( Base:GetWide()-80, 0 )
 BaseCloseBtn:SetText( "" )
 BaseCloseBtn:SetSize( 80, 30 )
 BaseCloseBtn.DoClick = function()
+    --pathp.ActorSettings = ActorSettings
+
+    net.Start( "UpdatePathTables" )
+        net.WriteTable( ActorSettings )
+        net.WriteEntity( pathp )
+    net.SendToServer()
+
 	if IsValid(Base) then
         Base:Remove()
     end
@@ -480,6 +494,12 @@ function BuildPageTwo()
 
     -- Toggleable Buttons (Works like checkboxes)
     -- Actor Collision
+
+    TestBTN1 = FancyImageButton( 0, 0, 20, 20, BtnSettingsContainer, 1, 0, 10, 0, 0, "icon16/cog.png", "Color" )
+    TestBTN1.DoClick = function()
+        surface.PlaySound( "ui/csgo_ui_contract_type4.wav" )
+    end
+
     local Tog = 0
     local TogBtn = FancyToggleButton( 0, 0, 50, 20, BtnSettingsContainer, Tog, "Collisions", 1, 0, 10, 0, 0 )
     TogBtn.DoClick = function( self )
@@ -582,6 +602,44 @@ function FancyLabel( x, y, text, font, col, parent, should_dock, m_l, m_t, m_r, 
     fancy_label:SetFont( font )
     fancy_label:SetTextColor( col )
     fancy_label:SizeToContents()
+end
+
+-- ## ----------------------------------- Actors2 ---------------------------------- ## --
+-- Fancy Button
+-- ## ------------------------------------------------------------------------------ ## --
+function FancyButton( x, y, w, h, parent, should_dock, m_l, m_t, m_r, m_b )
+    local fancy_btn = vgui.Create( "DButton", parent )
+    fancy_btn:SetPos( x, y )
+    fancy_btn:SetText( "" )
+    fancy_btn:SetSize( w, h )
+
+    if should_dock == 1 then fancy_btn:Dock( RIGHT ) else fancy_btn:Dock( NODOCK ) end
+    fancy_btn:DockMargin( m_l, m_t, m_r, m_b )
+
+    return fancy_btn
+end
+
+-- ## ----------------------------------- Actors2 ---------------------------------- ## --
+-- Fancy Image Button
+-- ## ------------------------------------------------------------------------------ ## --
+function FancyImageButton( x, y, w, h, parent, should_dock, m_l, m_t, m_r, m_b, img, str )
+    local fancy_img_btn = vgui.Create( "DButton", parent )
+    fancy_img_btn:SetPos( x, y )
+    fancy_img_btn:SetText( "" )
+    fancy_img_btn:SetSize( w, h )
+    fancy_img_btn:SetImage( img )
+
+    if should_dock == 1 then fancy_img_btn:Dock( TOP ) else fancy_img_btn:Dock( NODOCK ) end
+    fancy_img_btn:DockMargin( m_l-3, m_t, m_r, m_b )
+
+    fancy_img_btn.Paint = function()
+        surface.SetTextColor( 210, 210, 210, 255 )
+        surface.SetFont( "AC2_F15" )
+        surface.SetTextPos( 30, 2 )
+        surface.DrawText( str )
+    end
+
+    return fancy_img_btn
 end
 
 -- ## ----------------------------------- Actors2 ---------------------------------- ## --

@@ -93,11 +93,13 @@ if ( CLIENT ) then
 	language.Add("tool.actors2_pathmaker.name", AC2_LANG[A2LANG]["ac2_tool_category"].." - "..AC2_LANG[A2LANG]["ac2_tool_pathmaker"])
 	language.Add("tool.actors2_pathmaker.desc", AC2_LANG[A2LANG]["ac2_tool_pm_desc"])
 	language.Add("tool.actors2_pathmaker.0", AC2_LANG[A2LANG]["ac2_tool_pm_info"])
+	language.Add("tool.actors2_pathmaker.info", AC2_LANG[A2LANG]["ac2_tool_pm_info"])
 
 	-- Stage 1 of the tool, used when rotating
 	language.Add("tool.actors2_pathmaker.left_1", AC2_LANG[A2LANG]["ac2_tool_pm_leftclick1"])
 	language.Add("tool.actors2_pathmaker.shift_left_1", AC2_LANG[A2LANG]["ac2_tool_pm_shiftleft1"])
 	language.Add("tool.actors2_pathmaker.1", AC2_LANG[A2LANG]["ac2_tool_pm_rotation"])
+	language.Add("tool.actors2_pathmaker.info_1", AC2_LANG[A2LANG]["ac2_tool_pm_rotation"])
 
 	-- Cache strings for serverside usage
 	language.Add("ac2_notify_removed_pathptn", AC2_LANG[A2LANG]["ac2_tool_pm_remove_pathpnt"])
@@ -522,6 +524,7 @@ if SERVER then
 	util.AddNetworkString( "DrawPathPointLine" )
 	util.AddNetworkString( "NotifyPathPointRMV" )
 	util.AddNetworkString( "CheckNavMesh" )
+	util.AddNetworkString( "UpdatePathTables" )
 
 	function CreatePathPoint( ply, pos )
 		pathpnt = ents.Create( "ac2_pathpoint" )
@@ -550,57 +553,77 @@ if SERVER then
 	-- If it exists, remove it and create again (despawn)
 	-- Somewhat unoptimized, needs to be called when the path Updates
 	-- LeftClick, RightClick, E+Reload
+
 	function CheckActorSpawn( ply )
 		local PathPTBL = GetActorPointsTBL( ply )
 
 		if PathPTBL and #PathPTBL[PathCount] > 0 then
-			local PathP = PathPTBL[PathCount]
-			local ACEnt = ents.GetByIndex(PathP[1])
-			local ACName = string.format("%s%s", "ac2_", tostring(PathP[1]))
+			local SelectedPath = PathPTBL[PathCount]
+			local ActorPoint = ents.GetByIndex( SelectedPath[1] )
+			local ActorName = string.format( "%s%s", "ac2_", tostring( SelectedPath[1] ) )
+			local SettingsTable = ActorPoint:GetTable().ActorSettings
 
-			if IsValid( ACEnt:GetTable().ActorSettings.ActorEnt ) and ACEnt:GetTable().ActorSettings.ActorEnt:GetName() == ACName then
-				ACEnt:GetTable().ActorSettings.ActorEnt:Remove()
-				numpad.Remove( ACEnt:GetTable().ActorSettings.npzAcSpawn )
-				numpad.Remove( ACEnt:GetTable().ActorSettings.npzAcDeSpawn )
+			SettingsTable.Model = SettingsTable.Model or "models/alyx.mdl"
+			SettingsTable.Skin = SettingsTable.Skin or 0
 
-				FaceLastPathPoint( PathP )
-				CreateActorSpawn( ply, ACEnt:GetPos(), ACEnt:GetAngles(), ACEnt:GetTable().ActorSettings, PathP[1] )
-				
+			if IsValid( SettingsTable.ActorEnt ) and SettingsTable.ActorEnt:GetName() == ActorName then
+				SettingsTable.ActorEnt:Remove()
+				--numpad.Remove( SettingsTable.npzAcSpawn )
+				--numpad.Remove( SettingsTable.npzAcDeSpawn )
+
+				FaceLastPathPoint( SelectedPath )
+				CreateActorSpawn( ply, ActorPoint:GetPos(), ActorPoint:GetAngles(), SettingsTable, SelectedPath[1] )
 			else
-				FaceLastPathPoint( PathP )
-				CreateActorSpawn( ply, ACEnt:GetPos(), ACEnt:GetAngles(), ACEnt:GetTable().ActorSettings, PathP[1] )
+				FaceLastPathPoint( SelectedPath )
+				CreateActorSpawn( ply, ActorPoint:GetPos(), ActorPoint:GetAngles(), SettingsTable, SelectedPath[1] )
 			end
+
 		end
 	end
 
+	-- Creates the Spawn of the Actor
 	function CreateActorSpawn( ply, pos, angs, t, id )
 		npz = ents.Create( "ac2_actor_generic" )
 		if not IsValid( npz ) then return end
+
+		t.ActorEnt = npz
+		local AcSpawn = numpad.OnDown( ply, t.SKey, "Actors2Spawn", npz, pos, 0, t )
+		local AcDeSpawn = numpad.OnDown( ply, t.DSKey, "Actors2DeSpawn", npz )
 
 		npz:SetName( "ac2_"..id )
 		npz:SetPos( pos )
 		npz:SetAngles( angs )
 		npz:SetOwner( ply )
 
-		t.ActorEnt = npz
-		t.npzAcSpawn = numpad.OnDown(ply, t.SKey, "ActorSpawn", npz, pos, 0)
-		t.npzAcDeSpawn = numpad.OnDown(ply, t.DSKey, "ActorDeSpawn", npz)
 	end
 
-	local function SpawnActor(ply, ent, pos, delay, t)
+	-- Spawns and activates the actor
+	local function SpawnActors2( ply, ent, pos, delay, t )
 		if not IsValid( ent ) then return false end
+		if not IsValid( t.ActorEnt ) then return false end
 
-		local posz = string.Explode(" ", tostring(pos))
+		local posz = string.Explode( " ", tostring(pos) )
 		delay = delay or 0
-		timer.Simple( delay, function()
-			ent:SetPos(Vector( posz[1], posz[2], posz[3] ) )
-			ent:Spawn()
-			ent:Activate()
+		timer.Simple( delay+0.1, function()
+			if t.ActorEnt:GetName() == ent:GetName() then
+
+				-- Not sure why this is here, but it works.
+				function ent:Initialize()
+					ent:SetModel(t.Model)
+					ent:SetSkin(t.Skin)
+				end
+
+				ent:SetPos(Vector( posz[1], posz[2], posz[3] ) )
+				ent:Spawn()
+				ent:Activate()
+			end
 		end)
 	end
 
+	-- Despawn the actor by forcing a path update
+	-- Prevents it from running twice
 	local PTwice = 1
-	local function DeSpawnActor(ply, ent)
+	local function DeSpawnActor( ply, ent )
 		if not IsValid( ent ) then return false end
 
 		if PTwice == 1 then
@@ -610,11 +633,22 @@ if SERVER then
 		timer.Simple(1, function() PTwice = 1 end)
 	end
 
-	numpad.Register("ActorSpawn", function( pl, ent )
-		if not IsValid(ent) then return false end
-		SpawnActor()
-	end)
-	numpad.Register("ActorDeSpawn", DeSpawnActor )
+	-- Register the numpads
+	numpad.Register( "Actors2Spawn", SpawnActors2 )
+	numpad.Register( "Actors2DeSpawn", DeSpawnActor )
+
+	-- Receives the Table from the Panel
+	-- Merges the table on the entity that was modified
+	-- Forces an update to the path to refresh the settings.
+	net.Receive( "UpdatePathTables", function()
+		local Panel_PathTbl = net.ReadTable()
+		local Panel_PathEnt = net.ReadEntity()
+
+		if IsValid( Panel_PathEnt ) and next( Panel_PathTbl ) != nil then
+			table.Merge(Panel_PathEnt.ActorSettings, Panel_PathTbl)
+			CheckActorSpawn( Panel_PathEnt:GetOwner() )
+		end
+	end )
 end
 
 -- ## ----------------------------------- Actors2 ---------------------------------- ## --
