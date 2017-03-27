@@ -138,9 +138,9 @@ end
 -- ## ----------------------------------- Actors2 ---------------------------------- ## --
 -- Fade Functions with Search
 -- ## ------------------------------------------------------------------------------ ## --
-local HC_ModelList = list.Get( "Def_NPCList" )
-local NPC_NiceList = list.Get( "FormatedNPCList" )
-local PlyModelsList = player_manager.AllValidModels()
+for k, v in SortedPairs( list.Get( "NPC" ) ) do
+    if v.Model then list.Set( "Def_NPCList", k, v.Model ) end
+end
 
 function fadePanelAlpha( str, search_str )
     if IsValid( MdlSelect ) then MdlSelect:Remove() end
@@ -148,22 +148,20 @@ function fadePanelAlpha( str, search_str )
         ModelListBase:AlphaTo( 0, 0, 0 )
         ModelListBase:AlphaTo( 255, 1, 0 )
 
-        if str == "npcs" then
-            local npc_list = table.Merge( NPC_NiceList, HC_ModelList )
-            CreateModelList( table.Merge( NPC_NiceList, HC_ModelList ) )
+        if str == "npcs" then         
+            CreateModelList( list.Get( "Def_NPCList" ) )
         end
         if str == "plymodels" then
-            CreateModelList( PlyModelsList )
+            CreateModelList( player_manager.AllValidModels() )
         end
         if str == "search" then
-            local all_npc_list = table.Merge( NPC_NiceList, HC_ModelList )
-            local SearchTable = table.Merge( all_npc_list, PlyModelsList )
+            local NPCList = list.Get( "Def_NPCList" )
+            local PlyModelsList = player_manager.AllValidModels()
+            local SearchTable = table.Merge( NPCList, PlyModelsList )
             local ResultList = {}
 
-            local lower_searchstr = string.lower( search_str )
-
             for k, v in SortedPairs( SearchTable ) do
-                if string.find( string.lower( v ), lower_searchstr, 0, true ) or string.find( string.lower( k ), lower_searchstr, 0, true ) then
+                if string.find( string.lower( v ), string.lower( search_str ), 0, true ) or string.find( string.lower( k ), string.lower( search_str ), 0, true ) then
                      table.insert(ResultList, v)
                 end
             end
@@ -203,7 +201,6 @@ BaseCloseBtn:SetPos( Base:GetWide()-80, 0 )
 BaseCloseBtn:SetText( "" )
 BaseCloseBtn:SetSize( 80, 30 )
 BaseCloseBtn.DoClick = function()
-    --pathp.ActorSettings = ActorSettings
 
     net.Start( "UpdatePathTables" )
         net.WriteTable( ActorSettings )
@@ -308,6 +305,7 @@ ListBtnMain:SetPos( 0, 0 )
 ListBtnMain:SetText( "" )
 ListBtnMain:SetSize( 60, 30 )
 ListBtnMain.DoClick = function()
+    surface.PlaySound( "ui/csgo_ui_contract_type2.wav" )
 	fadePanelAlpha( "npcs", "" )
 end
 ListBtnMain.Paint = function()
@@ -324,6 +322,7 @@ ListBtnPlyModls:SetPos( 65, 0 )
 ListBtnPlyModls:SetText( "" )
 ListBtnPlyModls:SetSize( 100, 30 )
 ListBtnPlyModls.DoClick = function()
+    surface.PlaySound( "ui/csgo_ui_contract_type2.wav" )
 	fadePanelAlpha( "plymodels", "" )
 end
 ListBtnPlyModls.Paint = function()
@@ -855,9 +854,5 @@ list.Set ( "Def_NPCList", "Zombie Poison", "models/Zombie/Poison.mdl" )
 
 list.Set ( "Def_NPCList", "Antlion", "models/AntLion.mdl" )
 list.Set ( "Def_NPCList", "Antlion Guard", "models/antlion_guard.mdl" )
-
-for k, v in SortedPairs( list.Get( "NPC" ) ) do
-    list.Set( "FormatedNPCList", k, v.Model)
-end
 
 end -- End Client

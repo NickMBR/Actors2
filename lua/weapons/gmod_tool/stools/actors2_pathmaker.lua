@@ -38,7 +38,7 @@ local PathPointsTBL = {}
 local PathSelector = 1
 local PathCount = 1
 local degrees = 0
-local AC2_Version = "104"
+local AC2_Version = "115"
 local CheckActors2Addon = {}
 local WlcState = 0
 
@@ -553,7 +553,6 @@ if SERVER then
 	-- If it exists, remove it and create again (despawn)
 	-- Somewhat unoptimized, needs to be called when the path Updates
 	-- LeftClick, RightClick, E+Reload
-
 	function CheckActorSpawn( ply )
 		local PathPTBL = GetActorPointsTBL( ply )
 
@@ -568,15 +567,22 @@ if SERVER then
 
 			if IsValid( SettingsTable.ActorEnt ) and SettingsTable.ActorEnt:GetName() == ActorName then
 				SettingsTable.ActorEnt:Remove()
-				--numpad.Remove( SettingsTable.npzAcSpawn )
-				--numpad.Remove( SettingsTable.npzAcDeSpawn )
+				numpad.Remove( SettingsTable.npzAcSpawn )
+				numpad.Remove( SettingsTable.npzAcDeSpawn )
 
 				FaceLastPathPoint( SelectedPath )
-				CreateActorSpawn( ply, ActorPoint:GetPos(), ActorPoint:GetAngles(), SettingsTable, SelectedPath[1] )
+				CreateActorSpawn( ply, ActorPoint:GetPos(), ActorPoint:GetAngles(), SettingsTable, SelectedPath )
 			else
 				FaceLastPathPoint( SelectedPath )
-				CreateActorSpawn( ply, ActorPoint:GetPos(), ActorPoint:GetAngles(), SettingsTable, SelectedPath[1] )
+				CreateActorSpawn( ply, ActorPoint:GetPos(), ActorPoint:GetAngles(), SettingsTable, SelectedPath )
 			end
+
+			--[[print("Table is:")
+			PrintTable(SettingsTable)
+			print("ID is:")
+			print(SelectedPath[1])
+			print("Table of IDs is:")
+			PrintTable(SelectedPath)]]--
 
 		end
 	end
@@ -587,37 +593,81 @@ if SERVER then
 		if not IsValid( npz ) then return end
 
 		t.ActorEnt = npz
-		local AcSpawn = numpad.OnDown( ply, t.SKey, "Actors2Spawn", npz, pos, 0, t )
-		local AcDeSpawn = numpad.OnDown( ply, t.DSKey, "Actors2DeSpawn", npz )
+		t.npzAcSpawn = numpad.OnDown( ply, t.SKey, "Actors2Spawn", npz, pos, 0, t, id )
+		t.npzAcDeSpawn = numpad.OnDown( ply, t.DSKey, "Actors2DeSpawn", npz )
 
-		npz:SetName( "ac2_"..id )
+		npz:SetName( "ac2_"..id[1] )
 		npz:SetPos( pos )
 		npz:SetAngles( angs )
 		npz:SetOwner( ply )
-
 	end
 
 	-- Spawns and activates the actor
-	local function SpawnActors2( ply, ent, pos, delay, t )
+	local function SpawnActors2( ply, ent, pos, delay, settings, ac_paths )
 		if not IsValid( ent ) then return false end
-		if not IsValid( t.ActorEnt ) then return false end
+		if not IsValid( settings.ActorEnt ) then return false end
 
 		local posz = string.Explode( " ", tostring(pos) )
 		delay = delay or 0
-		timer.Simple( delay+0.1, function()
-			if t.ActorEnt:GetName() == ent:GetName() then
+		local loop = 0
 
-				-- Not sure why this is here, but it works.
-				function ent:Initialize()
-					ent:SetModel(t.Model)
-					ent:SetSkin(t.Skin)
-				end
+		local ActorPaths = {}
+		for k, v in pairs ( ac_paths ) do
+			table.insert( ActorPaths, ents.GetByIndex(v):GetPos() )
+		end
 
-				ent:SetPos(Vector( posz[1], posz[2], posz[3] ) )
-				ent:Spawn()
-				ent:Activate()
+		-- Not sure why this is here, but it works!
+		if settings.ActorEnt:GetName() == ent:GetName() and settings.ActorEnt:GetOwner() == ply then
+			function ent:Initialize()
+				ent:SetModel(settings.Model)
+				ent:SetSkin(settings.Skin)
+				if settings.Bodygroup then ent:SetBodyGroups( string.Replace( settings.Bodygroup, " ", "" ) ) end
 			end
-		end)
+
+			function ent:RunBehaviour()
+				timer.Simple(0.2, function()
+					self:AddGestureSequence( self:LookupSequence( "headpatgesture" ) )
+				end)
+
+				self:StartActivity( ACT_WALK )
+				self.loco:SetDesiredSpeed( 90 )
+
+				if loop == 1 then
+					while ( true ) do
+						for k, v in SortedPairs (ActorPaths) do
+							if (k == 3) then
+								timer.Simple(0.5, function()
+									self:AddGestureSequence( self:LookupSequence( "kgesture13p" ) )
+								end)
+								
+								self:MoveToPos(v, options)
+							else
+								self:MoveToPos(v, options)
+							end
+						end
+					end
+				else
+					for k, v in SortedPairs (ActorPaths) do
+						if (k == 3) then
+							timer.Simple(0.5, function()
+								self:AddGestureSequence( self:LookupSequence( "kgesture13p" ) )
+							end)
+							
+							self:MoveToPos(v, options)
+						else
+							self:MoveToPos(v, options)
+						end
+					end
+				end
+			end
+		end
+
+		-- Spawns it with the delay input by the user
+		timer.Simple( delay, function()
+			ent:SetPos( Vector( posz[1], posz[2], posz[3] ) )
+			ent:Spawn()
+			ent:Activate()
+		end )
 	end
 
 	-- Despawn the actor by forcing a path update
