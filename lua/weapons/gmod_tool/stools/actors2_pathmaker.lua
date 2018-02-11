@@ -633,7 +633,7 @@ if SERVER then
 
 			function ent:RunBehaviour()
 				timer.Simple(0.2, function()
-					self:AddGestureSequence( self:LookupSequence( "headpatgesture" ) )
+					self:AddGestureSequence( self:LookupSequence( "A_consolelean" ) )
 				end)
 
 				self:StartActivity( ACT_WALK )
@@ -644,7 +644,7 @@ if SERVER then
 						for k, v in SortedPairs (ActorPaths) do
 							if (k == 3) then
 								timer.Simple(0.5, function()
-									self:AddGestureSequence( self:LookupSequence( "kgesture13p" ) )
+									self:AddGestureSequence( self:LookupSequence( "A_consolelean" ) )
 								end)
 								
 								self:MoveToPos(v, options)

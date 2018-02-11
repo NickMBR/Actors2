@@ -30,6 +30,7 @@ surface.CreateFont( "AC2_F20", {
 local RedBtnHover, RedBtnTextHover, WhiteBtnHover, WhiteBtnTextHover, BlueBtnHover, BlueBtnTextHover, GreenBtnHover, GreenBtnTextHover = Color( 35, 35, 35, 255 )
 local ActorSettings = {}
 local ActorAnimations = {}
+local SelectedAnimation = nil
 
 -- ## ----------------------------------- Actors2 ---------------------------------- ## --
 -- Receive the Actor Settings
@@ -92,8 +93,6 @@ function UpdateFromConvars()
         mdl:SetModel( ActorSettings.Model )
         mdl.Entity:SetPos( Vector( -120, 0, -55 ) )
 		mdl.Entity:SetSkin( ActorSettings.Skin )
-		
-		PrintTable(mdl.Entity:GetSequenceList())
 
         local ac_bgroups = string.Replace(ActorSettings.Bodygroup, " ", "")
         mdl.Entity:SetBodyGroups(ac_bgroups)
@@ -211,8 +210,94 @@ function mdl:LayoutEntity( Entity )
     Entity:SetAngles( self.Angles )
 end
 
+-- Makes Page 2 container
+Container = vgui.Create( "DPanel", Base )
+Container:SetPos( ( Base:GetWide()-Base:GetWide()/2 )-100, 30 )
+Container:SetSize( Base:GetWide()/2+90, Base:GetTall()-40 )
+Container:SetPaintBackground( false )
+
+-- Back Button
+local ListBtnBack = vgui.Create( "DButton", Container )
+ListBtnBack:SetPos( 0, 10 )
+ListBtnBack:SetText( "" )
+ListBtnBack:SetSize( 80, 30 )
+ListBtnBack.DoClick = function()
+	surface.PlaySound( "ui/csgo_ui_contract_type4.wav" )
+	
+end
+ListBtnBack.Paint = function()
+	ButtonHover( ListBtnBack, "red" )
+	surface.SetDrawColor( RedBtnHover )
+	surface.DrawRect( 0, 0, ListBtnBack:GetWide(), ListBtnBack:GetTall() )
+
+	draw.SimpleText( AC2_LANG[A2LANG]["ac2_panelset_btnback"], "AC2_F15", 40, 15, RedBtnTextHover, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
+end
+
+-- Common Base Panel
+AnimationsContainer = vgui.Create( "DPanel", Container )
+AnimationsContainer:SetPos( 0, 60 )
+AnimationsContainer:SetSize( 300, Container:GetTall()-70 )
+AnimationsContainer:SetPaintBackground( false )
+AnimationsContainer:SetBackgroundColor( Color( 100, 100, 100, 255 ) )
+
+local animcontrolpanel = vgui.Create( "DListView", AnimationsContainer)
+animcontrolpanel:SetMultiSelect( false )
+animcontrolpanel:AddColumn( "Animation" )
+animcontrolpanel:Dock( FILL )
+
+local function PlayPreviewAnimation( panel, playermodel )
+
+	if ( !panel or !IsValid( panel.Entity ) ) then return end
+		
+	timer.Create( "lol", 0, 1, function()
+		local animz = SelectedAnimation	
+		local iSeq = panel.Entity:LookupSequence( animz )
+		local iSeqDur = panel.Entity:SequenceDuration( iSeq )
+		panel.Entity:SetPoseParameter("move_x", 1)
+		panel.Entity:ResetSequence( iSeq ) 
+		panel.Entity:ResetSequenceInfo()
+		panel.Entity:SetCycle( 0 )
+			
+		timer.Adjust( "lol", iSeqDur, 0, function()
+			if (!panel or !IsValid( panel.Entity ) ) then timer.Destroy( "lol" ) return end
+			panel.Entity:SetPoseParameter("move_x",1)
+			panel.Entity:ResetSequence( iSeq ) 
+			panel.Entity:ResetSequenceInfo()
+			panel.Entity:SetCycle( 0 )
+		end)
+	end)			
+end
+
+local function FilterAnimations()
+	--"g_", "p_", "e_", "b_", "bg_", "hg_", "tc_", "aim_", "turn", "gest_", "pose_", "pose_", "auto_", "layer_", "posture", "bodyaccent", "a_"
+	--local badBegginings = {"g_", "p_", "e_", "b_", "bg_", "hg_", "tc_", "aim_", "turn", "gest_", "auto_", "layer_", "posture", "bodyaccent", "a_", "aimlayer_", "flinch_", "accentdown_", "accentup_", "bodystretch"}
+	
+	local badAnimations = { "accent", "apex", "loop", "delta", "layer", "default", "in", "out", "exit", "arms", "spine" }
+	for k, v in SortedPairsByValue( mdl.Entity:GetSequenceList() ) do
+		local isbad = false
+		for i, s in pairs( badAnimations ) do
+			if ( string.match( v:lower(), s:lower() ) != nil ) then
+				isbad = true
+				break
+			end
+		end
+		if ( isbad == true) then continue end
+
+		animcontrolpanel:AddLine(v)
+	end
+			
+	animcontrolpanel.OnRowSelected = function(panel, line)
+		timer.Simple( 0.1, function() 
+			SelectedAnimation = panel:GetLine(line):GetValue(1)
+			PlayPreviewAnimation(mdl, model)	
+		end )
+				
+	end
+end
+
 Base:MakePopup()
 UpdateFromConvars()
+FilterAnimations()
 
 end -- end open panel
 
