@@ -41,12 +41,6 @@ properties.Add( "ac2_p_editpathpoint", {
 		return false
 	end,
 	Action = function( self, ent )
-		self:MsgStart()
-			net.WriteEntity( ent )
-		self:MsgEnd()
-	end,
-	Receive = function( self, length, player )
-		local ent = net.ReadEntity()
-		if ( !self:Filter( ent, player ) ) then return end
+		OpenActorAnimationsPanel( ent )
 	end
 } )
