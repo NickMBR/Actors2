@@ -566,10 +566,6 @@ if SERVER then
 			SettingsTable.Model = SettingsTable.Model or "models/alyx.mdl"
 			SettingsTable.Skin = SettingsTable.Skin or 0
 
-			net.Start( "PathSettings" )
-				net.WriteTable( SettingsTable )
-			net.Send( ply )
-
 			if IsValid( SettingsTable.ActorEnt ) and SettingsTable.ActorEnt:GetName() == ActorName then
 				SettingsTable.ActorEnt:Remove()
 				numpad.Remove( SettingsTable.npzAcSpawn )
@@ -581,6 +577,10 @@ if SERVER then
 				FaceLastPathPoint( SelectedPath )
 				CreateActorSpawn( ply, ActorPoint:GetPos(), ActorPoint:GetAngles(), SettingsTable, SelectedPath )
 			end
+			
+			net.Start( "PathSettings" )
+				net.WriteTable( SettingsTable )
+			net.Send( ply )
 
 			--[[print("Table is:")
 			PrintTable(SettingsTable)
@@ -605,6 +605,8 @@ if SERVER then
 		npz:SetPos( pos )
 		npz:SetAngles( angs )
 		npz:SetOwner( ply )
+
+		return npz
 	end
 
 	-- Spawns and activates the actor
