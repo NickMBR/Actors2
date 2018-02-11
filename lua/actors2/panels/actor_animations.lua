@@ -28,7 +28,16 @@ surface.CreateFont( "AC2_F20", {
 -- Variables
 -- ## ------------------------------------------------------------------------------ ## --
 local RedBtnHover, RedBtnTextHover, WhiteBtnHover, WhiteBtnTextHover, BlueBtnHover, BlueBtnTextHover, GreenBtnHover, GreenBtnTextHover = Color( 35, 35, 35, 255 )
+local ActorSettings = {}
 local ActorAnimations = {}
+
+-- ## ----------------------------------- Actors2 ---------------------------------- ## --
+-- Receive the path settings
+-- ## ------------------------------------------------------------------------------ ## --
+net.Receive( "PathSettings", function()
+	ActorSettings = net.ReadTable()
+	PrintTable(ActorSettings)
+end )
 
 -- ## ----------------------------------- Actors2 ---------------------------------- ## --
 -- Open the Panel

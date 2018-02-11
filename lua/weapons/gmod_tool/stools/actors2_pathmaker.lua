@@ -525,6 +525,7 @@ if SERVER then
 	util.AddNetworkString( "NotifyPathPointRMV" )
 	util.AddNetworkString( "CheckNavMesh" )
 	util.AddNetworkString( "UpdatePathTables" )
+	util.AddNetworkString( "PathSettings" )
 
 	function CreatePathPoint( ply, pos )
 		pathpnt = ents.Create( "ac2_pathpoint" )
@@ -564,6 +565,10 @@ if SERVER then
 
 			SettingsTable.Model = SettingsTable.Model or "models/alyx.mdl"
 			SettingsTable.Skin = SettingsTable.Skin or 0
+
+			net.Start( "PathSettings" )
+				net.WriteTable( SettingsTable )
+			net.Send( ply )
 
 			if IsValid( SettingsTable.ActorEnt ) and SettingsTable.ActorEnt:GetName() == ActorName then
 				SettingsTable.ActorEnt:Remove()
