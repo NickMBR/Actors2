@@ -637,7 +637,9 @@ if SERVER then
 				end)
 
 				self:StartActivity( ACT_WALK )
-				self.loco:SetDesiredSpeed( 90 )
+				self.loco:SetDesiredSpeed( 30 )
+				self.loco:SetAcceleration( 9999 )
+				self.loco:SetDeceleration( 0 )
 
 				if loop == 1 then
 					while ( true ) do
@@ -657,13 +659,13 @@ if SERVER then
 					for k, v in SortedPairs (ActorPaths) do
 						if (k == 3) then
 							timer.Simple(0.5, function()
-								self:AddGestureSequence( self:LookupSequence( "kgesture13p" ) )
+								self:AddGestureSequence( self:LookupSequence( "G_puncuate" ) )
 							end)
-							
-							self:MoveToPos(v, options)
-						else
-							self:MoveToPos(v, options)
 						end
+
+						ply:ChatPrint('arrived at pos:')
+						ply:ChatPrint(tostring(v))
+						self:MoveToPos(v, options)
 					end
 				end
 			end
