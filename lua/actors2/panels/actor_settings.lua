@@ -131,7 +131,25 @@ function CreateModelList( mdl_list )
             UpdateFromConvars()
             RebuildBodygroupTab()
         end
-    end
+	end
+	
+	MdlSelect.VBar.Paint = function()
+		surface.SetDrawColor( 50, 50, 50, 255 )
+		surface.DrawRect( 0, 0, MdlSelect:GetWide(), MdlSelect:GetTall() )
+	end
+
+	MdlSelect.VBar.btnGrip.Paint = function()
+		surface.SetDrawColor( 210, 210, 210, 255 )
+		surface.DrawRect( 0, 0, MdlSelect:GetWide(), MdlSelect:GetTall() )
+	end
+
+	MdlSelect.VBar.btnUp.Paint = function()
+		--surface.DrawRect( 0, 0, 0, 0 )
+	end
+
+	MdlSelect.VBar.btnDown.Paint = function()
+		--surface.DrawRect( 0, 0, 0, 0 )
+	end
 end
 
 

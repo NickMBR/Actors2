@@ -235,15 +235,33 @@ end
 
 -- Common Base Panel
 AnimationsContainer = vgui.Create( "DPanel", Container )
-AnimationsContainer:SetPos( 0, 60 )
-AnimationsContainer:SetSize( 300, Container:GetTall()-70 )
+AnimationsContainer:SetPos( 0, 82 )
+AnimationsContainer:SetSize( 400, Container:GetTall()-82 )
 AnimationsContainer:SetPaintBackground( false )
 AnimationsContainer:SetBackgroundColor( Color( 100, 100, 100, 255 ) )
 
 local animcontrolpanel = vgui.Create( "DListView", AnimationsContainer)
-animcontrolpanel:SetMultiSelect( false )
-animcontrolpanel:AddColumn( "Animation" )
 animcontrolpanel:Dock( FILL )
+animcontrolpanel:SetMultiSelect( false )
+animcontrolpanel:AddColumn( "Animations" )
+animcontrolpanel.m_bHideHeaders = true
+
+local animcontrolHeader = vgui.Create( "DButton", Container )
+animcontrolHeader:SetPos( 0, 50 )
+animcontrolHeader:SetSize( 400, 32 )
+animcontrolHeader:SetText( "" )
+animcontrolHeader.DoClick = function()
+	surface.PlaySound( "ui/csgo_ui_contract_type4.wav" )
+end
+	
+animcontrolHeader.Paint = function()
+	ButtonHover( animcontrolHeader, "blue" )
+	surface.SetDrawColor( BlueBtnHover )
+	surface.DrawRect( 0, 0, animcontrolHeader:GetWide(), animcontrolHeader:GetTall() )
+
+	draw.SimpleText( "Animations", "AC2_F15", 200, 16, BlueBtnTextHover, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
+end
+
 
 local function PlayPreviewAnimation( panel, playermodel )
 
@@ -290,8 +308,53 @@ local function FilterAnimations()
 		timer.Simple( 0.1, function() 
 			SelectedAnimation = panel:GetLine(line):GetValue(1)
 			PlayPreviewAnimation(mdl, model)	
-		end )
-				
+		end )	
+	end
+
+	animcontrolpanel.Paint = function()
+		surface.SetTextColor( 230, 230, 230 )
+		surface.SetDrawColor(80, 80, 80, 255)
+		surface.DrawRect( 0, 0, animcontrolpanel:GetWide(), animcontrolpanel:GetTall() )
+	end
+
+	for _, line in pairs( animcontrolpanel:GetLines() ) do
+		function line:Paint(w, h) 
+			if ( line:IsHovered() ) then
+				surface.SetDrawColor( Color( 110, 110, 110 ) )
+				surface.DrawRect(0, 0, line:GetWide(), line:GetTall() )
+
+			elseif ( line:GetAltLine() ) then
+				surface.SetDrawColor( Color( 80, 80, 80 ) )
+				surface.DrawRect(0, 0, line:GetWide(), line:GetTall() )
+
+			else
+				surface.SetDrawColor( Color( 60, 60, 60 ) )
+				surface.DrawRect( 0, 0, line:GetWide(), line:GetTall() ) 
+			end
+		end
+
+		for _, column in pairs( line["Columns"] ) do
+			column:SetFont( "AC2_F10" )
+			column:SetTextColor( Color( 210, 210, 210 ) )
+		end
+	end
+
+	animcontrolpanel.VBar.Paint = function()
+		surface.SetDrawColor( 50, 50, 50, 255 )
+		surface.DrawRect( 0, 0, animcontrolpanel:GetWide(), animcontrolpanel:GetTall() )
+	end
+
+	animcontrolpanel.VBar.btnGrip.Paint = function()
+		surface.SetDrawColor( 210, 210, 210, 255 )
+		surface.DrawRect( 0, 0, animcontrolpanel:GetWide(), animcontrolpanel:GetTall() )
+	end
+
+	animcontrolpanel.VBar.btnUp.Paint = function()
+		--surface.DrawRect( 0, 0, 0, 0 )
+	end
+
+	animcontrolpanel.VBar.btnDown.Paint = function()
+		--surface.DrawRect( 0, 0, 0, 0 )
 	end
 end
 
