@@ -44,6 +44,12 @@ AC2_LANG = {
 		["ac2_panelset_inputcustom"]		= "Model Path:",
 		["ac2_panelset_btnnext"]			= "Next",
 		["ac2_panelset_btnback"]			= "Go Back",
+
+		-- Actor Path Settings Panel
+		["ac2_panelpath_title"]				= "Path Settings",
+		["ac2_panelpath_animations"]		= "Animations",
+		["ac2_panelpath_animsettings"]		= "Animation Settings",
+		["ac2_panelpath_sounds"]			= "Sounds",
 	},
 	["pt-BR"] = {
 		-- Ferramenta de Trajeto
@@ -86,6 +92,12 @@ AC2_LANG = {
 		["ac2_panelset_inputcustom"]		= "Caminho do Modelo:",
 		["ac2_panelset_btnnext"]			= "Próximo",
 		["ac2_panelset_btnback"]			= "Voltar",
+
+		-- Painel de Configurações do Ponto de Trajeto
+		["ac2_panelpath_title"]				= "Configurações do Ponto de Trajeto",
+		["ac2_panelpath_animations"]		= "Animações",
+		["ac2_panelpath_animsettings"]		= "Configurações da Animação",
+		["ac2_panelpath_sounds"]			= "Sons",
 	}
 }
 

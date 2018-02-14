@@ -127,7 +127,7 @@ Base.Paint = function()
     surface.SetTextColor( 210, 210, 210, 255 )
     surface.SetFont( "AC2_F20" )
     surface.SetTextPos( 10, 5 )
-	surface.DrawText( AC2_LANG[A2LANG]["ac2_panelset_title"] )
+	surface.DrawText( AC2_LANG[A2LANG]["ac2_panelpath_title"] )
 end
 
 -- ## ----------------------------------- Actors2 ---------------------------------- ## --
@@ -210,30 +210,78 @@ function mdl:LayoutEntity( Entity )
     Entity:SetAngles( self.Angles )
 end
 
--- Makes Page 2 container
+-- Makes Page 1 container
 Container = vgui.Create( "DPanel", Base )
 Container:SetPos( ( Base:GetWide()-Base:GetWide()/2 )-100, 30 )
 Container:SetSize( Base:GetWide()/2+90, Base:GetTall()-40 )
 Container:SetPaintBackground( false )
 
--- Back Button
-local ListBtnBack = vgui.Create( "DButton", Container )
-ListBtnBack:SetPos( 0, 10 )
-ListBtnBack:SetText( "" )
-ListBtnBack:SetSize( 80, 30 )
-ListBtnBack.DoClick = function()
+-- Animations Page Button
+local AnimsPageBtn = vgui.Create( "DButton", Container )
+AnimsPageBtn:SetPos( 0, 10 )
+AnimsPageBtn:SetText( "" )
+AnimsPageBtn:SetSize( 80, 30 )
+AnimsPageBtn.DoClick = function()
 	surface.PlaySound( "ui/csgo_ui_contract_type4.wav" )
-	
+	-- RENDER ANIMATIONS PAGE
 end
-ListBtnBack.Paint = function()
-	ButtonHover( ListBtnBack, "red" )
-	surface.SetDrawColor( RedBtnHover )
-	surface.DrawRect( 0, 0, ListBtnBack:GetWide(), ListBtnBack:GetTall() )
+AnimsPageBtn.Paint = function()
+	ButtonHover( AnimsPageBtn, "blue" )
+	surface.SetDrawColor( BlueBtnHover )
+	surface.DrawRect( 0, 0, AnimsPageBtn:GetWide(), AnimsPageBtn:GetTall() )
 
-	draw.SimpleText( AC2_LANG[A2LANG]["ac2_panelset_btnback"], "AC2_F15", 40, 15, RedBtnTextHover, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
+	draw.SimpleText( AC2_LANG[A2LANG]["ac2_panelpath_animations"], "AC2_F15", 40, 15, BlueBtnTextHover, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
 end
 
--- Common Base Panel
+-- Animations Page Button
+local SoundsPageBtn = vgui.Create( "DButton", Container )
+SoundsPageBtn:SetPos( 90, 10 )
+SoundsPageBtn:SetText( "" )
+SoundsPageBtn:SetSize( 80, 30 )
+SoundsPageBtn.DoClick = function()
+	surface.PlaySound( "ui/csgo_ui_contract_type4.wav" )
+	-- RENDER ANIMATIONS PAGE
+end
+SoundsPageBtn.Paint = function()
+	ButtonHover( SoundsPageBtn, "blue" )
+	surface.SetDrawColor( BlueBtnHover )
+	surface.DrawRect( 0, 0, SoundsPageBtn:GetWide(), SoundsPageBtn:GetTall() )
+
+	draw.SimpleText( AC2_LANG[A2LANG]["ac2_panelpath_sounds"], "AC2_F15", 40, 15, BlueBtnTextHover, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
+end
+
+-- Search Animations TextBox
+local ListSearch = vgui.Create( "DTextEntry", Container )
+ListSearch:SetPos( 180, 10 )
+ListSearch:SetSize( 220, 30 )
+ListSearch:SetText( AC2_LANG[A2LANG]["ac2_panelset_search"] )
+ListSearch:SetFont( "AC2_F15" )
+ListSearch:SetUpdateOnType( true )
+ListSearch.OnEnter = function( self )
+    if self:GetValue() != "" then
+	    --fadePanelAlpha( "search", self:GetValue() )
+    end
+end
+
+ListSearch.OnValueChange = function ( self )
+	--fadePanelAlpha( "search", self:GetValue() )
+end
+
+ListSearch.OnGetFocus = function( self )
+	if self:GetValue() == AC2_LANG[A2LANG]["ac2_panelset_search"] then
+        self:SetText( "" )
+    end
+end
+
+ListSearch.Paint = function( self )
+    ButtonHover( ListSearch, "blue" )
+	surface.SetDrawColor( BlueBtnHover )
+    surface.DrawRect( 0, 0, ListSearch:GetWide(), ListSearch:GetTall() )
+
+    self:DrawTextEntryText( Color(210,210,210), Color(35,35,35), Color(210,210,210) )
+end
+
+-- Animations Base Panel
 AnimationsContainer = vgui.Create( "DPanel", Container )
 AnimationsContainer:SetPos( 0, 82 )
 AnimationsContainer:SetSize( 400, Container:GetTall()-82 )
@@ -243,7 +291,7 @@ AnimationsContainer:SetBackgroundColor( Color( 100, 100, 100, 255 ) )
 local animcontrolpanel = vgui.Create( "DListView", AnimationsContainer)
 animcontrolpanel:Dock( FILL )
 animcontrolpanel:SetMultiSelect( false )
-animcontrolpanel:AddColumn( "Animations" )
+animcontrolpanel:AddColumn( AC2_LANG[A2LANG]["ac2_panelpath_animations"] )
 animcontrolpanel.m_bHideHeaders = true
 
 local animcontrolHeader = vgui.Create( "DButton", Container )
@@ -255,12 +303,37 @@ animcontrolHeader.DoClick = function()
 end
 	
 animcontrolHeader.Paint = function()
-	ButtonHover( animcontrolHeader, "blue" )
-	surface.SetDrawColor( BlueBtnHover )
+	ButtonHover( animcontrolHeader, "red" )
+	surface.SetDrawColor( RedBtnHover )
 	surface.DrawRect( 0, 0, animcontrolHeader:GetWide(), animcontrolHeader:GetTall() )
 
-	draw.SimpleText( "Animations", "AC2_F15", 200, 16, BlueBtnTextHover, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
+	draw.SimpleText( AC2_LANG[A2LANG]["ac2_panelpath_animations"], "AC2_F15", 200, 16, RedBtnTextHover, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
 end
+
+-- Animations Preview Panel
+AnimationsPreviewContainer = vgui.Create( "DPanel", Container )
+AnimationsPreviewContainer:SetPos( 410, 0 )
+AnimationsPreviewContainer:SetSize( Container:GetWide() - AnimationsContainer:GetWide(), Container:GetTall()-82 )
+AnimationsPreviewContainer:SetPaintBackground( false )
+AnimationsPreviewContainer:SetBackgroundColor( Color( 100, 100, 100, 255 ) )
+
+local AnimationSettingsHeader = vgui.Create( "DButton", AnimationsPreviewContainer )
+AnimationSettingsHeader:SetPos( 0, 50 )
+AnimationSettingsHeader:SetSize( AnimationsPreviewContainer:GetWide(), 32 )
+AnimationSettingsHeader:SetText( "" )
+AnimationSettingsHeader.DoClick = function()
+	surface.PlaySound( "ui/csgo_ui_contract_type4.wav" )
+	print(AnimationsPreviewContainer:GetWide())
+end
+	
+AnimationSettingsHeader.Paint = function()
+	ButtonHover( AnimationSettingsHeader, "red" )
+	surface.SetDrawColor( RedBtnHover )
+	surface.DrawRect( 0, 0, AnimationSettingsHeader:GetWide(), AnimationSettingsHeader:GetTall() )
+
+	draw.SimpleText( AC2_LANG[A2LANG]["ac2_panelpath_animsettings"], "AC2_F15", AnimationsPreviewContainer:GetWide() / 2, 16, RedBtnTextHover, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
+end
+-- ac2_panelpath_animsettings
 
 
 local function PlayPreviewAnimation( panel, playermodel )
