@@ -640,6 +640,7 @@ if SERVER then
 				self.loco:SetDesiredSpeed( 90 )
 				self.loco:SetAcceleration( 9999 )
 				self.loco:SetDeceleration( 0 )
+				--self.loco:FaceTowards(ActorPaths[1])
 
 				if loop == 1 then
 					while ( true ) do
