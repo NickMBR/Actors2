@@ -618,9 +618,17 @@ if SERVER then
 		delay = delay or 0
 		local loop = 0
 
+		if settings.Config and settings.Config.Repeat then loop = settings.Config.Repeat end
+		PrintTable(settings)
+
 		local ActorPaths = {}
 		for k, v in pairs ( ac_paths ) do
-			table.insert( ActorPaths, ents.GetByIndex(v):GetPos() )
+			table.insert( ActorPaths, 
+				{
+					pos = ents.GetByIndex(v):GetPos(),
+					ang = ents.GetByIndex(v):GetAngles()
+				}
+			)
 		end
 
 		-- Not sure why this is here, but it works!
@@ -640,30 +648,39 @@ if SERVER then
 				self.loco:SetDesiredSpeed( 90 )
 				self.loco:SetAcceleration( 9999 )
 				self.loco:SetDeceleration( 0 )
+				self:SetAngles(ActorPaths[1].ang)
 				--self.loco:FaceTowards(ActorPaths[1])
 
 				if loop == 1 then
-					while ( true ) do
+					while IsValid( self ) do
 						for k, v in SortedPairs (ActorPaths) do
-							if (k == 3) then
-								timer.Simple(0.5, function()
-									self:AddGestureSequence( self:LookupSequence( "A_consolelean" ) )
-								end)
-								
-								self:MoveToPos(v, options)
+							if IsValid( self ) then
+								if (k == 3) then
+									timer.Simple(0.5, function()
+										if IsValid( self ) then self:AddGestureSequence( self:LookupSequence( "A_consolelean" ) ) end
+									end)
+									
+									self:MoveToPos(v.pos, options)
+								else
+									self:MoveToPos(v.pos, options)
+								end
 							else
-								self:MoveToPos(v, options)
+								break
 							end
 						end
 					end
 				else
 					for k, v in SortedPairs (ActorPaths) do
-						if (k == 3) then
-							timer.Simple(0.5, function()
-								self:AddGestureSequence( self:LookupSequence( "gesture_turn_rigth_90" ) )
-							end)
+						if IsValid( self ) then
+							if (k == 3) then
+								timer.Simple(0.5, function()
+									if IsValid( self ) then self:AddGestureSequence( self:LookupSequence( "gesture_turn_rigth_90" ) ) end
+								end)
+							end
+							self:MoveToPos(v.pos, options)
+						else
+							break
 						end
-						self:MoveToPos(v, options)
 					end
 				end
 			end

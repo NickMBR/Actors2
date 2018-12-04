@@ -41,6 +41,9 @@ function OpenActorSettingsPanel( pathp )
 ActorSettings.Model = ActorSettings.Model or "models/alyx.mdl"
 ActorSettings.Skin = ActorSettings.Skin or 0
 ActorSettings.Bodygroup = ActorSettings.Bodygroup or "0"
+ActorSettings.Config = ActorSettings.Config or {}
+
+local BtnRepeat = ActorSettings.Config.Repeat or 0
 
 -- ## ----------------------------------- Actors2 ---------------------------------- ## --
 -- Hover Functions
@@ -511,7 +514,6 @@ function BuildPageTwo()
 
     -- Toggleable Buttons (Works like checkboxes)
     -- Actor Collision
-
     TestBTN1 = FancyImageButton( 0, 0, 20, 20, BtnSettingsContainer, 1, 0, 10, 0, 0, "icon16/cog.png", "Color" )
     TestBTN1.DoClick = function()
         surface.PlaySound( "ui/csgo_ui_contract_type4.wav" )
@@ -524,6 +526,7 @@ function BuildPageTwo()
         FancyToggleButton_Update( TogBtn, Tog, 50, 20, "Collisions" )
     end
 
+	-- Actor Damage
     local Tog = 0
     local TogBtn = FancyToggleButton( 0, 0, 50, 20, BtnSettingsContainer, Tog, "Damage", 1, 0, 2, 0, 0 )
     TogBtn.DoClick = function( self )
@@ -531,15 +534,17 @@ function BuildPageTwo()
         FancyToggleButton_Update( TogBtn, Tog, 50, 20, "Damage" )
     end
 
-    local Tog = 0
-    local TogBtn = FancyToggleButton( 0, 0, 50, 20, BtnSettingsContainer, Tog, "Repeat", 1, 0, 2, 0, 0 )
+	-- Actor Repeat
+    local TogBtn = FancyToggleButton( 0, 0, 50, 20, BtnSettingsContainer, BtnRepeat, "Repeat", 1, 0, 2, 0, 0 )
     TogBtn.DoClick = function( self )
-        if Tog != 1 then Tog = 1 else Tog = 0 end
-        FancyToggleButton_Update( TogBtn, Tog, 50, 20, "Repeat" )
+		if BtnRepeat != 1 then BtnRepeat = 1 else BtnRepeat = 0 end
+		ActorSettings.Config.Repeat = BtnRepeat
+        FancyToggleButton_Update( TogBtn, BtnRepeat, 50, 20, "Repeat" )
     end
 
     FancyLabel( 0, 0, "Optional Settings:", "AC2_F20", Color( 210, 210, 210, 255 ), BtnSettingsContainer, 1, 0, 10, 0, 0)
 
+	-- Actor Free Walk
     local Tog = 0
     local TogBtn = FancyToggleButton( 0, 0, 50, 20, BtnSettingsContainer, Tog, "Free Walk", 1, 0, 10, 0, 0 )
     TogBtn.DoClick = function( self )
@@ -547,6 +552,7 @@ function BuildPageTwo()
         FancyToggleButton_Update( TogBtn, Tog, 50, 20, "Free Walk" )
     end
 
+	-- Actor Interactive
     local Tog = 0
     local TogBtn = FancyToggleButton( 0, 0, 50, 20, BtnSettingsContainer, Tog, "Interactive", 1, 0, 2, 0, 0 )
     TogBtn.DoClick = function( self )
